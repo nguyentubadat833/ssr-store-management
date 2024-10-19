@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("NUXT_DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  role          String?
+  email         String?
+  passwordHash  String?
+  googleId      String?
+  facebookId    String?
+  profile       Json?
+  status        Int       @default(1)
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+}
+
+model File {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String   @unique
+  extention  String?
+  type       String
+  uploadedAt DateTime @default(now())
+}
+
+model Log {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  time    DateTime @default(now())
+  message String
+  status  Int
+}
+
+model Customer {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  code          String    @unique
+  info          Json?
+  status        Int       @default(1) // 1. Sử dụng
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+  lastUpdatedBy String?
+
+  order Order[]
+}
+
+model Category {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  code          String    @unique
+  name          String
+  alias         String
+  translate     Json?
+  status        Int       @default(1) // 1. Sử dụng
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+  lastUpdatedBy String?
+
+  product Product[]
+}
+
+model Product {
+  id            String  @id @default(auto()) @map("_id") @db.ObjectId
+  code          String  @unique
+  name          String
+  alias         String
+  description   String?
+  originalPrice Float?
+  salePercent   Float?
+  translate     Json?
+
+  stock               Stock[]
+  orderDetail         OrderDetail[]
+  purchaseOrderDetail PurchaseOrderDetail[]
+
+  categoryCode  String?
+  status        Int       @default(1)
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+  lastUpdatedBy String?
+
+  category Category? @relation(fields: [categoryCode], references: [code])
+}
+
+model Stock {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  intQuantity   Int
+  outQuantity   Int?
+  status        Int       @default(1) // 0. Die, 1.Available
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+  lastUpdatedBy String?
+
+  productCode   String
+  warehouseCode String
+  receivingCode String
+
+  product   Product   @relation(fields: [productCode], references: [code])
+  warehouse Warehouse @relation(fields: [warehouseCode], references: [code])
+  receiving Receiving @relation(fields: [receivingCode], references: [code])
+}
+
+model Warehouse {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  code          String    @unique
+  name          String
+  location      String?
+  maxCapacity   Int?
+  status        Int       @default(1)
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+  lastUpdatedBy String?
+
+  stocks Stock[]
+}
+
+model Supplier {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  code          String    @unique
+  info          Json?
+  status        Int       @default(1)
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+  lastUpdatedBy String?
+
+  purchaseOrders PurchaseOrder[]
+}
+
+model Order {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  customerCode  String
+  totalAmount   Float
+  orderDate     DateTime
+  status        Int       @default(0) // 0. Pending, 1. Shipped, 2. Delivered
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+  lastUpdatedBy String?
+
+  details OrderDetail[]
+
+  customer Customer @relation(fields: [customerCode], references: [code])
+}
+
+model OrderDetail {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  orderId     String @db.ObjectId
+  productCode String
+  quantity    Int
+  unitPrice   Float
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productCode], references: [code])
+}
+
+model PurchaseOrder {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  code          String    @unique
+  supplierCode  String
+  status        Int       @default(0) // 0. Pending, 1. Ordered, 2. Received
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+  lastUpdatedBy String?
+
+  receiving Receiving[]
+
+  supplier Supplier              @relation(fields: [supplierCode], references: [code])
+  details  PurchaseOrderDetail[]
+}
+
+model PurchaseOrderDetail {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  poCode      String
+  productCode String
+  quantity    Int
+  unitPrice   Float?
+  totalAmount Float
+  status      Int    @default(1) // 0.NoUse
+
+  po      PurchaseOrder @relation(fields: [poCode], references: [code])
+  product Product       @relation(fields: [productCode], references: [code])
+}
+
+model Receiving {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  code          String    @unique
+  poCode        String
+  status        Int       @default(0) // 0. Pending, 1. Progress 2. Imported
+  receivedDate  DateTime?
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+  lastUpdatedBy String?
+
+  stocks Stock[]
+
+  po PurchaseOrder @relation(fields: [poCode], references: [code])
+}
