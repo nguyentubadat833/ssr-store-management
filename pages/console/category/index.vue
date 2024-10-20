@@ -1,4 +1,8 @@
 <script setup lang="ts">
+
+
+
+
 definePageMeta({
   layout: 'console',
   isAuth: true,
@@ -7,6 +11,7 @@ definePageMeta({
     en: 'Category management'
   },
 })
+
 </script>
 
 <template>

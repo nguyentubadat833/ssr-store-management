@@ -1,5 +1,3 @@
-import type {IRouterInfo} from "~/types/IRouterInfo";
-
 export default function () {
     const router = useRouter()
     const {langCurrent} = useLangConfig()
@@ -12,7 +10,6 @@ export default function () {
                 link: route.meta.name || route.path,
             }
         })
-
     return{
         authRoutes,
         consoleRoutes

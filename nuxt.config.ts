@@ -1,8 +1,10 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import path from 'path';
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
-  srcDir: 'src/',
+  // srcDir: 'src/',
   extends: [
     './base'
   ],
@@ -19,13 +21,13 @@ export default defineNuxtConfig({
   },
   imports: {
     dirs: [
-      'stores',
-      'composables',
-      'composables/*/index.{ts,js,mjs,mts}',
-      'composables/**/**',
-      'utils',
-      'utils/*/index.{ts,js,mjs,mts}',
-      'utils/**/**',
+    //   'stores',
+      // 'composables',
+      // 'composables/*/index.{ts,js,mjs,mts}',
+      // 'composables/**/**',
+      // 'utils',
+      // 'utils/*/index.{ts,js,mjs,mts}',
+      // 'utils/**/**',
       'types',
     ]
   },
