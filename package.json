@@ -14,13 +14,16 @@
   "dependencies": {
     "@nuxt/ui": "^2.18.7",
     "@prisma/nuxt": "^0.0.35",
+    "@types/randomstring": "^1.3.0",
+    "@types/slug": "^5.0.9",
     "nuxt": "^3.13.2",
     "randomstring": "^1.3.0",
-    "slug": "^9.1.0",
+    "slug": "^10.0.0",
     "vue": "latest",
     "vue-router": "latest"
   },
   "devDependencies": {
-    "@prisma/client": "^5.21.1"
+    "@prisma/client": "^5.21.1",
+    "nuxt-lodash": "^2.5.3"
   }
 }
