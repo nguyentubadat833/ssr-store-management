@@ -3,6 +3,7 @@ definePageMeta({
   layout: 'console',
   isAuth: true,
   isConsoleMenu: true,
+  order: 1,
   pageName: {
     en: 'Console'
   },

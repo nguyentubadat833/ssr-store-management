@@ -1,8 +1,5 @@
 <script setup lang="ts">
 
-
-
-
 definePageMeta({
   layout: 'console',
   isAuth: true,
@@ -12,12 +9,15 @@ definePageMeta({
   },
 })
 
+const {data, keyData} = useCategory()
+const {data: categoryData} = await useAsyncData(keyData.categoryDataKey, () => data())
+console.log(categoryData.value)
 </script>
 
 <template>
-<div>
-  category
-</div>
+  <div>
+    category
+  </div>
 </template>
 
 <style scoped>

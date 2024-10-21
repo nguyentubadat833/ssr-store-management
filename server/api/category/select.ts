@@ -1,12 +1,13 @@
 import _ from 'lodash'
 import categoryRepo from "~/server/repositories/categoryRepo";
+import {ICategoryParamsSelectReq} from "~/types/ICategory";
 export default defineEventHandler(async (event) => {
-    const params = getQuery(event)
+    const params: ICategoryParamsSelectReq = getQuery(event)
     const {selectType, categoryCode} = params
     switch (selectType) {
-        case 'selectMany':
+        case 'many':
             return categoryRepo.selectManyByStatus();
-        case 'selectByCode':
+        case 'byCode':
             if (_.isString(categoryCode)){
                 return categoryRepo.selectByCode(categoryCode)
             }

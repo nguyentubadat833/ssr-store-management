@@ -2,12 +2,12 @@ import type {Notification} from "#ui/types/notification";
 
 interface IUseAPIObject {
     endpoint: string,
-    method: string,
+    method?: string,
     params?: object,
     body?: object,
-    isShowSuccessMessage: boolean,
-    isShowErrorMessage: boolean,
-    isUseDefaultProcessOnResponse: boolean,
+    isShowSuccessMessage?: boolean,
+    isShowErrorMessage?: boolean,
+    isUseDefaultProcessOnResponse?: boolean,
     customProcessOnResponse?: any,
     callbackMethodOnSuccess?: any,
     callbackMethodOnError?: any,

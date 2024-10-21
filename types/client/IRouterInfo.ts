@@ -1,4 +1,5 @@
 export interface IRouterInfo {
     name: string
-    link: string
+    link: string,
+    order?: number
 }
