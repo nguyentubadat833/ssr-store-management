@@ -2,14 +2,10 @@ export interface IApiCurd {
     keyData?: {
         [key: string]: any;
     }
-    data?: (req?: IClientObjectReq) => any,
-    save?: (req?: IClientObjectReq) => any,
-    select?: (req?: IClientObjectReq) => any,
-    create?: (req?: IClientObjectReq) => any,
-    update?: (req?: IClientObjectReq) => any,
-    delete?: (req?: IClientObjectReq) => any
-}
-
-export interface IClientObjectReq {
-
+    data?: (req?: any) => any,
+    save?: (req: any) => any,
+    select?: (req: any) => any,
+    create?: (req: any) => any,
+    update?: (req: any) => any,
+    del?: (req: any) => any
 }

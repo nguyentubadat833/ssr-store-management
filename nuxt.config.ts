@@ -36,4 +36,8 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'light'
   },
+  experimental: {
+    componentIslands: true
+  }
+
 })
