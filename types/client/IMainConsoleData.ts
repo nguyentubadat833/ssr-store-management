@@ -9,7 +9,9 @@ export abstract class IMainConsoleData {
 
     abstract createData(): void
 
+    abstract saveData(): void
+
     abstract deleteData(object?: any): void
 
-    abstract saveData(): void
+    abstract refreshData(): void
 }

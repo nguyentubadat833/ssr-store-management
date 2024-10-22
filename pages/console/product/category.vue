@@ -11,13 +11,13 @@ definePageMeta({
   },
 })
 
-const {data, select, del, create, update, keyData} = useCategory()
+const {data, del, save, keyData} = useCategory()
 const {data: categoryData, refresh: refreshData} = await useAsyncData(keyData.categoryDataKey, () => data())
 console.log(categoryData.value)
 const categoryCurrent = reactive({
   name: '',
-  alias: '',
   code: '',
+  alias: '',
 })
 
 const columns = [{
@@ -39,7 +39,6 @@ const sort = ref({
 
 
 class ConsoleData extends IMainConsoleData {
-
   createData() {
     this.clearState()
     this.isOpenModal.value = true
@@ -52,36 +51,16 @@ class ConsoleData extends IMainConsoleData {
   }
 
   async deleteData(object?: any): Promise<void> {
-    this.isLoading.value = true
     await del({
       categoryCode: categoryCurrent.code
     })
-        .then(result => {
-          if (result) {
-            refreshData()
-            this.clearState()
-            this.isOpenModal.value = false
-          }
-        })
-        .finally(() => {
-          this.isLoading.value = false
-        })
   }
 
   async mapState(object: any): Promise<void> {
     this.isOpenModal.value = true
     let data: any
-    if (isString(object)) {
-      data = await select({
-        selectType: 'byCode',
-        categoryCode: object
-      })
-    } else {
-      if (isObject(object)) {
-        data = object
-      }
-    }
-    if (data) {
+    if (isObject(object)) {
+      data = object
       categoryCurrent.code = data?.code
       categoryCurrent.name = data?.name
       categoryCurrent.alias = data?.alias
@@ -89,21 +68,18 @@ class ConsoleData extends IMainConsoleData {
   }
 
   async saveData(): Promise<void> {
-    let code: string
-    if (categoryCurrent.code) {
-      code = await update({
-        code: categoryCurrent.code,
-        name: categoryCurrent.name
-      })
-    } else {
-      code = await create({
-        name: categoryCurrent.name,
-      })
-    }
-    if (code){
-      await this.mapState(code)
+    let code = await save({
+      code: categoryCurrent.code,
+      name: categoryCurrent.name
+    })
+    if (code) {
       await refreshData()
+      this.isOpenModal.value = false
     }
+  }
+
+  async refreshData(): Promise<void> {
+    await refreshData()
   }
 }
 

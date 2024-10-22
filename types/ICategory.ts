@@ -1,13 +1,8 @@
-export interface ICategoryCreate {
+export interface ICategoryDto {
+    code?: string
     name: string,
-    createdBy?: string
-}
-
-export interface ICategoryUpdate {
-    code: string
-    name: string
+    alias?: string,
     status?: number
-    lastUpdatedBy?: string
 }
 
 export interface ICategoryParamsSelectReq {
@@ -15,6 +10,6 @@ export interface ICategoryParamsSelectReq {
     categoryCode?: string
 }
 
-export interface ICategoryDeleteReq{
+export interface ICategoryDeleteReq {
     categoryCode: string
 }

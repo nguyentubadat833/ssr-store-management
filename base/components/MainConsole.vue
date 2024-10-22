@@ -4,11 +4,27 @@ import type {IMainConsoleData} from "~/types/client/IMainConsoleData";
 const {consoleData} = defineProps<{
   consoleData: IMainConsoleData
 }>()
+
+function deleteAction() {
+  consoleData.isLoading.value = true
+  try {
+    consoleData.deleteData()
+    consoleData.refreshData()
+    consoleData.clearState()
+    consoleData.isOpenModal.value = false
+  } finally {
+    consoleData.isLoading.value = false
+  }
+
+}
 </script>
 
 <template>
   <div class="space-y-6">
     <div class="py-2 border-b flex justify-end gap-4">
+      <UTooltip text="Refresh">
+        <UButton icon="ic:outline-sync" color="white" @click="consoleData.refreshData()"/>
+      </UTooltip>
       <UTooltip text="Print">
         <UButton icon="ic:outline-local-printshop" color="white"/>
       </UTooltip>
@@ -19,7 +35,7 @@ const {consoleData} = defineProps<{
     <slot/>
     <ClientOnly>
       <UModal v-model="consoleData.isOpenModal.value" :ui="{width: 'md:max-w-screen-md'}">
-        <div>
+        <div @keyup.enter="consoleData.saveData()">
           <div class="p-4 space-y-6 ">
             <slot name="modalBody"/>
             <div class="flex justify-between items-center gap-4">
@@ -32,7 +48,7 @@ const {consoleData} = defineProps<{
                   <UButton icon="ic:sharp-cleaning-services" @click="consoleData.clearState()"/>
                 </UTooltip>
                 <UTooltip text="Delete">
-                  <UButton icon="ic:outline-delete-outline" @click="consoleData.deleteData()"/>
+                  <UButton icon="ic:outline-delete-outline" @click="deleteAction"/>
                 </UTooltip>
                 <UTooltip text="Save">
                   <UButton icon="ic:outline-save" @click="consoleData.saveData()"/>

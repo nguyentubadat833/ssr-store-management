@@ -1,6 +1,9 @@
 import type {IApiCurd} from "~/types/client/IApiCurd";
-import type {ICategoryCreate, ICategoryDeleteReq, ICategoryParamsSelectReq, ICategoryUpdate} from "~/types/ICategory";
-import prisma from "~/lib/prisma";
+import type {
+    ICategoryDeleteReq,
+    ICategoryDto,
+    ICategoryParamsSelectReq,
+} from "~/types/ICategory";
 
 export default function () {
 
@@ -15,6 +18,7 @@ export default function () {
                 params: {
                     selectType: 'many'
                 } as ICategoryParamsSelectReq
+                ,isShowSuccessMessage: false
             })
         }
 
@@ -22,21 +26,13 @@ export default function () {
             console.log(req)
             return await useAPI({
                 endpoint: '/api/category/select',
-                params: req
+                params: req,
             })
         }
 
-        async create(data: ICategoryCreate): Promise<any> {
+        async save(data: ICategoryDto): Promise<string> {
             return await useAPI({
-                endpoint: '/api/category/create',
-                method: 'POST',
-                body: data
-            })
-        }
-
-        async update(data: ICategoryUpdate): Promise<any> {
-            return await useAPI({
-                endpoint: '/api/category/update',
+                endpoint: '/api/category/save',
                 method: 'PUT',
                 body: data
             })
