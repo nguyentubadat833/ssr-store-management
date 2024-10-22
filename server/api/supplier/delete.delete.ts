@@ -1,6 +1,5 @@
 import {ISupplierDeleteReq} from "~/types/ISupplier";
 
-
 export default defineEventHandler(async (event) => {
     const params: ISupplierDeleteReq = getQuery(event)
     await prismaClient.supplier.delete({

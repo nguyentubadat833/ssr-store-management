@@ -1,4 +1,3 @@
-import {ISupplierParamsSelectReq} from "~/types/ISupplier";
 import {IWarehouseParamsSelectReq} from "~/types/IWarehouse";
 
 export default defineEventHandler(async (event) => {

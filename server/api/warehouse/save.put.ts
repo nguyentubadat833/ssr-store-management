@@ -1,5 +1,3 @@
-
-import slug from "slug";
 import randomstring from "randomstring";
 import {ISupplierDto, ISupplierInfo} from "~/types/ISupplier";
 
