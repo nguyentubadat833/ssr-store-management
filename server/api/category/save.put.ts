@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
                 alias: slug(data.name),
                 status: data.status,
                 lastUpdatedAt: new Date(),
-                lastUpdatedBy: event.context.user?.email || 'unknown'
+                lastUpdatedBy: userAuthContext.getEmail(event)
             }
         })
     } else {
@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
                 }),
                 name: data.name,
                 alias: slug(data.name),
-                createdBy: event.context.user?.email || 'unknown'
+                createdBy: userAuthContext.getEmail(event)
             }
         })
         setResponseStatus(event, 201)

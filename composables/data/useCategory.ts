@@ -22,13 +22,13 @@ export default function () {
             })
         }
 
-        async select(req: ICategoryParamsSelectReq): Promise<any> {
-            console.log(req)
-            return await useAPI({
-                endpoint: '/api/category/select',
-                params: req,
-            })
-        }
+        // async select(req: ICategoryParamsSelectReq): Promise<any> {
+        //     console.log(req)
+        //     return await useAPI({
+        //         endpoint: '/api/category/select',
+        //         params: req,
+        //     })
+        // }
 
         async save(data: ICategoryDto): Promise<string> {
             return await useAPI({

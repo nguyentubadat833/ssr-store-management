@@ -64,25 +64,24 @@ model Category {
 }
 
 model Product {
-  id            String  @id @default(auto()) @map("_id") @db.ObjectId
-  code          String  @unique
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  code          String    @unique
   name          String
   alias         String
   description   String?
-  originalPrice Float?
-  salePercent   Float?
+  // originalPrice Float?
+  // salePercent   Float?
   translate     Json?
-
-  stock               Stock[]
-  orderDetail         OrderDetail[]
-  purchaseOrderDetail PurchaseOrderDetail[]
-
-  categoryCode  String?
+  categoryCode  String
   status        Int       @default(1)
   createdBy     String
   createdAt     DateTime  @default(now())
   lastUpdatedAt DateTime?
   lastUpdatedBy String?
+
+  stock               Stock[]
+  orderDetail         OrderDetail[]
+  purchaseOrderDetail PurchaseOrderDetail[]
 
   category Category? @relation(fields: [categoryCode], references: [code])
 }

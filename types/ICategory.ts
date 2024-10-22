@@ -2,7 +2,7 @@ export interface ICategoryDto {
     code?: string
     name: string,
     alias?: string,
-    status?: number
+    status?: number,
 }
 
 export interface ICategoryParamsSelectReq {

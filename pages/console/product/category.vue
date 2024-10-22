@@ -39,10 +39,6 @@ const sort = ref({
 
 
 class ConsoleData extends IMainConsoleData {
-  createData() {
-    this.clearState()
-    this.isOpenModal.value = true
-  }
 
   clearState(): void {
     categoryCurrent.name = ''

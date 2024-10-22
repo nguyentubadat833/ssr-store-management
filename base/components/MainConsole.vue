@@ -15,8 +15,13 @@ function deleteAction() {
   } finally {
     consoleData.isLoading.value = false
   }
-
 }
+
+function createAction() {
+  consoleData.clearState()
+  consoleData.isOpenModal.value = true
+}
+
 </script>
 
 <template>
@@ -29,7 +34,7 @@ function deleteAction() {
         <UButton icon="ic:outline-local-printshop" color="white"/>
       </UTooltip>
       <UTooltip text="Create">
-        <UButton icon="ic:baseline-plus" color="white" @click="consoleData.createData()"/>
+        <UButton icon="ic:baseline-plus" color="white" @click="createAction"/>
       </UTooltip>
     </div>
     <slot/>
