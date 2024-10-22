@@ -1,6 +1,5 @@
 export abstract class IMainConsoleData {
     isOpenModal: Ref<boolean> = ref(false);
-
     isLoading: Ref<boolean> = ref(false);
 
     abstract clearState(): void
@@ -9,7 +8,7 @@ export abstract class IMainConsoleData {
 
     abstract saveData(): Promise<void>
 
-    abstract deleteData(object?: any): Promise<void>
+    abstract deleteData(): Promise<void>
 
     abstract refreshData(): Promise<void>
 }

@@ -73,8 +73,8 @@ class ConsoleData extends IMainConsoleData {
     }
   }
 
-  refreshData(): void {
-    refreshData()
+  async refreshData(): Promise<void> {
+    await refreshData()
   }
 }
 
