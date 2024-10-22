@@ -5,11 +5,11 @@ const {consoleData} = defineProps<{
   consoleData: IMainConsoleData
 }>()
 
-function deleteAction() {
+async function deleteAction() {
   consoleData.isLoading.value = true
   try {
-    consoleData.deleteData()
-    consoleData.refreshData()
+    await consoleData.deleteData()
+    await consoleData.refreshData()
     consoleData.clearState()
     consoleData.isOpenModal.value = false
   } finally {

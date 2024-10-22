@@ -13,7 +13,6 @@ definePageMeta({
 
 const {data, del, save, keyData} = useCategory()
 const {data: categoryData, refresh: refreshData} = await useAsyncData(keyData.categoryDataKey, () => data())
-console.log(categoryData.value)
 const categoryCurrent = reactive({
   name: '',
   code: '',
@@ -74,8 +73,8 @@ class ConsoleData extends IMainConsoleData {
     }
   }
 
-  async refreshData(): Promise<void> {
-    await refreshData()
+  refreshData(): void {
+    refreshData()
   }
 }
 

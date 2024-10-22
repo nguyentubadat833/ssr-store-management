@@ -7,9 +7,9 @@ export abstract class IMainConsoleData {
 
     abstract mapState(object: any): void
 
-    abstract saveData(): void
+    abstract saveData(): Promise<void>
 
-    abstract deleteData(object?: any): void
+    abstract deleteData(object?: any): Promise<void>
 
     abstract refreshData(): Promise<void>
 }

@@ -61,14 +61,12 @@ export default async function ({
         },
         onResponse({response, request}) {
             if (isUseDefaultProcessOnResponse) {
-                console.log(response)
                 if (response.ok) {
                     result = response._data
                     if (isFunction(callbackMethodOnSuccess)) {
                         callbackMethodOnSuccess()
                     }
                     if (isShowSuccessMessage) {
-                        console.log('show')
                         let toastObject: Partial<Notification> = getToastObject({
                             type: 'success',
                             description: response?.statusText
