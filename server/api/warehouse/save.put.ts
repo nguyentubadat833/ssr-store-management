@@ -1,36 +1,34 @@
 import randomstring from "randomstring";
-import {ISupplierDto, ISupplierInfo} from "~/types/ISupplier";
+import {IWarehouseDto} from "~/types/IWarehouse";
 
 export default defineEventHandler(async (event) => {
-    const data: ISupplierDto = await readBody(event)
-    let response: ISupplierDto
-    const selectField = {
-        code: true,
-        info: true
-    }
+    const data: IWarehouseDto = await readBody(event)
+    let response: any
     if (data.code) {
-        response = await prismaClient.supplier.update({
+        response = await prismaClient.warehouse.update({
             where: {
                 code: data.code
             },
             data: {
-                info: data.info,
+                name: data.name,
+                location: data.location,
+                maxCapacity: data.maxCapacity,
                 lastUpdatedAt: new Date(),
                 lastUpdatedBy: userAuthContext.getEmail(event)
             },
-            select: selectField
         })
     } else {
-        response = await prismaClient.supplier.create({
+        response = await prismaClient.warehouse.create({
             data: {
-                code: 'SPL' + randomstring.generate({
+                code: 'WRH' + randomstring.generate({
                     length: 5,
                     charset: 'numeric'
                 }),
-                info: data.info,
+                name: data.name,
+                location: data.location,
+                maxCapacity: data.maxCapacity,
                 createdBy: userAuthContext.getEmail(event)
             },
-            select: selectField
         })
         setResponseStatus(event, 201)
     }
