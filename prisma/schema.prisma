@@ -165,6 +165,8 @@ model PurchaseOrder {
   code          String    @unique
   supplierCode  String
   status        Int       @default(0) // 0. Pending, 1. Ordered, 2. Received
+  orderDate     DateTime?
+  dateOfReceipt DateTime?
   createdBy     String
   createdAt     DateTime  @default(now())
   lastUpdatedAt DateTime?

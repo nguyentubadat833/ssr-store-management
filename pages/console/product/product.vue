@@ -17,23 +17,13 @@ definePageMeta({
 })
 
 const {data, del, save, keyData} = useProduct()
-const {data: categoryDataFetch, keyData: categoryKey} = useCategory()
+const {data: categoryDataFetch, keyData: categoryKey, getCategoryName} = useCategory()
 const {data: productData, refresh: refreshData} = await useAsyncData(keyData.productKeyData, () => data())
 const {data: categoryData} = await useAsyncData(categoryKey.categoryDataKey, () => categoryDataFetch(), {
-  transform: (input: ICategory) => {
+  transform: (input: ICategory[]) => {
     return input
   }
 })
-
-function getCategoryName(categoryCode: string) {
-  if (isArray(categoryData.value)) {
-    const find: ICategory = categoryData.value.find(e => e.code === categoryCode)
-    if (find) {
-      return find.name
-    }
-  }
-  return ''
-}
 
 const productCurrent = reactive<IProductDto>({
   name: '',
@@ -118,7 +108,7 @@ function selectedCategory(data: any) {
       <UTable :columns="columns" :rows="productData || []" @select="consoleData.mapState($event)" :sort="sort"
               class="max-h-96">
         <template #categoryCode-data="{row}">
-          <span>{{getCategoryName(row?.categoryCode)}}</span>
+          <span>{{getCategoryName(categoryData, row?.categoryCode)}}</span>
         </template>
       </UTable>
       <template #modalBody>
@@ -126,7 +116,7 @@ function selectedCategory(data: any) {
           <UFormGroup label="Category" name="categoryCode" :error="!productCurrent.categoryCode && 'You must select category'">
             <div class="flex justify-between gap-2">
               <UInput disabled v-model="productCurrent.categoryCode" class="w-full"/>
-              <UInput disabled :model-value="getCategoryName(productCurrent.categoryCode)" class="w-full"/>
+              <UInput disabled :model-value="getCategoryName(categoryData, productCurrent.categoryCode)" class="w-full"/>
               <SearchData :data="categoryData" :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]" @selected="selectedCategory"/>
             </div>
           </UFormGroup>

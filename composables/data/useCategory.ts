@@ -12,6 +12,16 @@ export default function () {
             categoryDataKey: 'category-data'
         }
 
+        getCategoryName(data: any, categoryCode: string) {
+            if (isArray(data)) {
+                const find = data.find(e => e.code === categoryCode)
+                if (find) {
+                    return find?.name
+                }
+            }
+            return ''
+        }
+
         async data(): Promise<any> {
             return await useAPI({
                 endpoint: '/api/category/select',

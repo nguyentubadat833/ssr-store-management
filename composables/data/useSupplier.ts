@@ -10,6 +10,16 @@ export default function () {
             supplierKeyData: 'supplier-data'
         }
 
+        getSupplierName(data: any, supplierCode: string) {
+            if (isArray(data)) {
+                const find = data.find(e => e.code === supplierCode)
+                if (find) {
+                    return find?.name
+                }
+            }
+            return ''
+        }
+
         async data(): Promise<any> {
             return await useAPI({
                 endpoint: '/api/supplier/select',
