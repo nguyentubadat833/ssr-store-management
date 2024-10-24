@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
                     orderDate: new Date()
                 }
             })
-            setResponseStatus(event, 200, 'Đơn hàng đã tiến hành')
+            setResponseStatus(event, 200, 'Confirmed successfully')
             break
         case "cancel":
             await prismaClient.purchaseOrder.update({
