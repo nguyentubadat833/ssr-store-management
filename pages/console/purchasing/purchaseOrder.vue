@@ -14,7 +14,7 @@ definePageMeta({
 })
 
 const {data: supplierFetch, keyData: supplierKey, getSupplierName} = useSupplier()
-const {data, create, update, del, keyData: poKey, purchaseOrderStatus} = usePurchaseOrder()
+const {data, create, update, select, del, keyData: poKey, purchaseOrderStatus} = usePurchaseOrder()
 const {data: productFetch, keyData: productKey, getProductName} = useProduct()
 const {data: productData} = useLazyAsyncData(productKey.productKeyData, () => productFetch(), {
   transform: (value: IProductDto[]) => {
@@ -50,7 +50,6 @@ const initialState: IPurchaseOrderDto = {
   orderDate: undefined,
   dateOfReceipt: undefined,
 };
-
 
 const poCurrent = reactive<IPurchaseOrderDto>({...initialState})
 const poDetailToDelete = ref<string[]>([])
@@ -96,13 +95,20 @@ const poDetailColumns = [{
   key: 'actions',
 }]
 
+async function selectByCode(code?: string) {
+  return await select({
+    selectType: 'byCode',
+    poCode: code ? code : poCurrent?.code
+  })
+}
+
 class ConsoleData extends IMainConsoleData {
   clearState(): void {
     useAssign(poCurrent, initialState)
   }
 
   async deleteData(): Promise<void> {
-    if (isString(poCurrent.code)) {
+    if (poCurrent.code) {
       await del({
         poCode: poCurrent.code
       })
@@ -110,6 +116,7 @@ class ConsoleData extends IMainConsoleData {
   }
 
   mapState(object: any): void {
+    console.log(object)
     this.isOpenModal.value = true
     if (isObject(object)) {
       useAssign(poCurrent, object)
@@ -121,11 +128,11 @@ class ConsoleData extends IMainConsoleData {
   }
 
   async saveData(): Promise<void> {
-    if (!isString(poCurrent.code)){
+    if (!poCurrent.code) {
       const poCode = await create(poCurrent)
-      if (isString(poCode)) {
+      if (poCode) {
         await refreshPoData()
-        this.isOpenModal.value = false
+        this.mapState(await selectByCode(poCode))
       }
     } else {
       await update({
@@ -143,6 +150,8 @@ class ConsoleData extends IMainConsoleData {
           } as IPurchaseOrderDetailUpdate
         } as IPurchaseOrderDto
       })
+      await refreshPoData()
+      this.mapState(await selectByCode())
     }
   }
 }
@@ -154,14 +163,38 @@ function selectedSupplier(data: any) {
 }
 
 function selectedProduct(data: any) {
-  // poCurrent.supplierCode = data[0]?.code
+  const addProducts: { code: string, name: string }[] = data
+  if (poCurrent.code) {
+    addProducts.forEach(e => {
+      (poCurrent.details as IPurchaseOrderDetail[]).push({
+        poCode: poCurrent.code,
+        productCode: e.code,
+        quantity: 0,
+        unitPrice: 0,
+        totalAmount: 0
+      } as IPurchaseOrderDetail)
+    })
+  }
   console.log(data)
 }
 
 function addDetailToDelete(index: number, row: IPurchaseOrderDetail) {
-  if (isString(row.id)){
+  if (isString(row.id) && isArray(poCurrent.details)) {
     poDetailToDelete.value.push(row.id)
     poCurrent.details?.splice(index, 1)
+  }
+}
+
+async function cancelOrConfirmPo(type: 'cancel' | 'confirm') {
+  if (poCurrent.code) {
+    await update({
+      params: {
+        updateType: type,
+        poCode: poCurrent.code
+      }
+    })
+    await refreshPoData()
+    consoleData.mapState(await selectByCode())
   }
 }
 
@@ -177,13 +210,14 @@ function addDetailToDelete(index: number, row: IPurchaseOrderDetail) {
         <div class="flex items-center justify-between">
           <div>
             <SearchData btn-label="Add Product" :is-non-icon="true" btn-color="white"
-                        :is-disabled="poCurrent.status !== 0" :data="productData"
+                        :is-disabled="poCurrent.status !== 0 && poCurrent.code" :data="productData"
                         :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]" :select-multi="true"
                         @selected="selectedProduct"/>
           </div>
           <div class="space-x-3">
-            <UButton label="Cancel" color="red" :disabled="poCurrent.status === 0"/>
-            <UButton label="Confirm" :disabled="poCurrent.status === 1"/>
+            <UButton label="Cancel" color="red" :disabled="poCurrent.status === 0"
+                     @click="cancelOrConfirmPo('cancel')"/>
+            <UButton label="Confirm" :disabled="poCurrent.status === 1" @click="cancelOrConfirmPo('confirm')"/>
           </div>
         </div>
         <UForm :state="poCurrent" class="space-y-5">
@@ -199,7 +233,7 @@ function addDetailToDelete(index: number, row: IPurchaseOrderDetail) {
             </div>
           </UFormGroup>
           <UFormGroup label="Status" name="status">
-            <USelect v-model="poCurrent.status" :options="purchaseOrderStatus().data" option-attribute="name"
+            <USelect disabled v-model="poCurrent.status" :options="purchaseOrderStatus().data" option-attribute="name"
                      value-attribute="status"/>
           </UFormGroup>
           <UFormGroup label="Order Date" name="orderDate">

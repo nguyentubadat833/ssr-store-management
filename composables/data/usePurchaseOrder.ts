@@ -52,6 +52,13 @@ export default function () {
             })
         }
 
+        async select(req: IPurchaseOrderParamsSelectReq): Promise<IPurchaseOrderDto> {
+            return await useAPI({
+                endpoint: '/api/purchaseOrder/select',
+                params: req
+            })
+        }
+
         async create(data: IPurchaseOrderDto): Promise<string> {
             return await useAPI({
                 endpoint: '/api/purchaseOrder/create',
