@@ -1,9 +1,16 @@
-interface IPurchaseOrderDetail {
+export interface IPurchaseOrderDetail {
+    id?: string
     poCode: string
     productCode: string
     quantity: number
     unitPrice?: number
     totalAmount: number
+}
+
+export interface IPurchaseOrderDetailUpdate {
+    toCreate?: IPurchaseOrderDetail[]
+    toUpdate?: IPurchaseOrderDetail[]
+    toDelete?: string[]
 }
 
 export interface IPurchaseOrderDto {
@@ -12,7 +19,7 @@ export interface IPurchaseOrderDto {
     status?: number
     orderDate?: Date,
     dateOfReceipt?: Date,
-    details?: IPurchaseOrderDetail[]
+    details?: IPurchaseOrderDetail[] | IPurchaseOrderDetailUpdate
 }
 
 export interface IPurchaseOrderParamsSelectReq {
@@ -22,4 +29,14 @@ export interface IPurchaseOrderParamsSelectReq {
 
 export interface IPurchaseOrderDeleteReq {
     poCode: string
+}
+
+export interface IPurchaseOrderParamsUpdateReq {
+    updateType: 'confirm' | 'cancel' | 'update',
+    poCode: string
+}
+
+export interface IPurchaseOrderUpdateReq {
+    params: IPurchaseOrderParamsUpdateReq
+    data?: IPurchaseOrderDto
 }

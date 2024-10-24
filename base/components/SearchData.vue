@@ -1,11 +1,27 @@
 <script setup>
-const {icon, btnLabel, title, data, selectMulti} = defineProps(['icon', 'btnLabel', 'title', 'columns', 'data', 'selectMulti'])
+const {
+  icon,
+  isNonIcon,
+  btnLabel,
+  btnColor,
+  isDisabled,
+  title,
+  data,
+  selectMulti
+} = defineProps(['icon', 'isNonIcon', 'btnColor', 'btnLabel', 'isDisabled', 'title', 'columns', 'data', 'selectMulti'])
 const emit = defineEmits(['selected'])
 
 const isOpen = ref(false)
 const result = ref()
 const singleResult = ref([])
 const q = ref('')
+const btnIcon = computed(() => {
+  if (!isNonIcon) {
+    return icon || 'heroicons:ellipsis-horizontal-20-solid'
+  } else {
+    return undefined
+  }
+})
 
 if (selectMulti === true) {
   result.value = []
@@ -71,7 +87,8 @@ function clearSelect() {
   <div>
     <div @click="isOpen = true">
       <slot v-if="$slots.btn" name="btn"/>
-      <UButton v-else :label="btnLabel || ''" :icon="icon ||'heroicons:ellipsis-horizontal-20-solid'" />
+      <UButton v-else :disabled="isDisabled" :label="btnLabel || ''" :color="btnColor || undefined"
+               :icon="btnIcon"/>
     </div>
     <UModal v-model="isOpen" :overlay="false">
       <UCard :ui="{ ring: '', divide: 'divide-y divide-gray-100 dark:divide-gray-800' }">

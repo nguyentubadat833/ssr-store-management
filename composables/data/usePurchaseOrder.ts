@@ -1,5 +1,10 @@
 import type {IApiCurd} from "~/types/client/IApiCurd";
-import type {IPurchaseOrderDeleteReq, IPurchaseOrderDto, IPurchaseOrderParamsSelectReq} from "~/types/IPurchaseOrder";
+import type {
+    IPurchaseOrderDeleteReq,
+    IPurchaseOrderDto,
+    IPurchaseOrderParamsSelectReq,
+    IPurchaseOrderUpdateReq
+} from "~/types/IPurchaseOrder";
 
 export default function () {
     class apiCurd implements IApiCurd {
@@ -52,6 +57,15 @@ export default function () {
                 endpoint: '/api/purchaseOrder/create',
                 method: 'POST',
                 body: data
+            })
+        }
+
+        async update(data: IPurchaseOrderUpdateReq) {
+            return await useAPI({
+                endpoint: '/api/purchaseOrder/update',
+                method: 'PUT',
+                params: data.params,
+                body: data?.data
             })
         }
 

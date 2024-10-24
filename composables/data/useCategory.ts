@@ -28,7 +28,7 @@ export default function () {
                 params: {
                     selectType: 'many'
                 } as ICategoryParamsSelectReq
-                ,isShowSuccessMessage: false
+                , isShowSuccessMessage: false
             })
         }
 

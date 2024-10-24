@@ -19,6 +19,17 @@ export default function () {
             })
         }
 
+        getProductName(data: any, productCode: string) {
+            console.log('proudctData', data)
+            if (isArray(data)) {
+                const find = data.find(e => e.code === productCode)
+                if (find) {
+                    return find?.name
+                }
+            }
+            return ''
+        }
+
         async save(data: IProductDto): Promise<string> {
             return await useAPI({
                 endpoint: '/api/product/save',

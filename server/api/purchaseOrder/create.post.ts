@@ -1,9 +1,10 @@
 import randomstring from "randomstring";
 import _ from 'lodash'
-import {IPurchaseOrderDto} from "~/types/IPurchaseOrder";
+import {type IPurchaseOrderDetail, IPurchaseOrderDto} from "~/types/IPurchaseOrder";
 
 export default defineEventHandler(async (event) => {
     const data: IPurchaseOrderDto = await readBody(event)
+    const details = data.details as IPurchaseOrderDetail[]
     const response = await prismaClient.purchaseOrder.create({
         data: {
             code: 'PO' + randomstring.generate({
@@ -13,7 +14,7 @@ export default defineEventHandler(async (event) => {
             supplierCode: data.supplierCode,
             createdBy: userAuthContext.getEmail(event),
             details: {
-                create: _.isArray(data.details) && data.details.length > 0 ? data.details : undefined
+                create: _.isArray(details) && details.length > 0 ? details : undefined
             }
         }
     })
