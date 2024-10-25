@@ -242,7 +242,7 @@ async function confirmPo() {
             <SearchData title="Select Product" btn-label="Add Product" :is-non-icon="true" btn-color="white"
                         :data="productData"
                         :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]" :select-multi="true"
-                        @selected="selectedProduct" :class="[{'pointer-events-none': !isPoPending}]"/>
+                        @selected="selectedProduct" :class="[{'pointer-events-none': !isPoPending && poCurrent.code}]"/>
           </div>
           <div class="space-x-3">
             <UButton label="Cancel" color="red"

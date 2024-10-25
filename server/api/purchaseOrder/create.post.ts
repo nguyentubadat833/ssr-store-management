@@ -19,9 +19,15 @@ export default defineEventHandler(async (event) => {
             // }
         }
     })
-    if (response.code && _.isArray(details) && details.length > 0 ){
+    if (response.code && _.isArray(details) && details.length > 0) {
+        const updatedDetails = details.map(e => {
+            return {
+                ...e,
+                poCode: response.code
+            };
+        });
         await prismaClient.purchaseOrderDetail.createMany({
-            data: details
+            data: updatedDetails
         })
     }
     setResponseStatus(event, 201)
