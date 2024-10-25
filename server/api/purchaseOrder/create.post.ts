@@ -14,11 +14,16 @@ export default defineEventHandler(async (event) => {
             supplierCode: data.supplierCode,
             description: data.description,
             createdBy: userAuthContext.getEmail(event),
-            details: {
-                create: _.isArray(details) && details.length > 0 ? details : undefined
-            }
+            // details: {
+            //     create: _.isArray(details) && details.length > 0 ? details : undefined
+            // }
         }
     })
+    if (response.code && _.isArray(details) && details.length > 0 ){
+        await prismaClient.purchaseOrderDetail.createMany({
+            data: details
+        })
+    }
     setResponseStatus(event, 201)
     return response.code
 })
