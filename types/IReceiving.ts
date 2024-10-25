@@ -1,3 +1,5 @@
+import type {IStockCurd, IStockDto} from "~/types/IStock";
+
 export interface IReceivingDto {
     code?: string
     poCode: string
@@ -6,8 +8,17 @@ export interface IReceivingDto {
 }
 
 export interface IReceivingParamsUpdateReq {
-    updateType: 'cancel' | 'progress' | 'imported' | 'update',
+    updateType: 'cancel' | 'progress' | 'imported' | 'curdStock',
     receivingCode: string
+}
+
+export interface IReceivingBodyReq {
+    stock: IStockCurd
+}
+
+export interface IReceivingUpdateReq {
+    params: IReceivingParamsUpdateReq,
+    body: IReceivingBodyReq
 }
 
 export interface IReceivingParamsSelectReq {

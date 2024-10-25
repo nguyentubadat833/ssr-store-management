@@ -3,7 +3,13 @@ export interface IStockDto {
     inQuantity: number
     outQuantity?: number
     status?: number
-    productCode: String
-    warehouseCode: String
-    receivingCode: String
+    productCode: string
+    warehouseCode: string
+    receivingCode: string
+    createdBy?: string
+}
+export interface IStockCurd {
+    toCreate?: IStockDto[]
+    toUpdate?: IStockDto[]
+    toDelete?: string[]
 }

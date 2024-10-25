@@ -1,8 +1,12 @@
-import {IReceivingParamsUpdateReq} from "~/types/IReceiving";
+import {type IReceivingBodyReq, IReceivingParamsUpdateReq} from "~/types/IReceiving";
 import receivingError from "~/server/utils/error/receivingError";
+import type {IStockCurd, IStockDto} from "~/types/IStock";
+import _ from 'lodash'
 
 export default defineEventHandler(async (event) => {
     const params: IReceivingParamsUpdateReq = getQuery(event)
+    const dataReq: IReceivingBodyReq = await readBody(event)
+    const {stock: stockReq} = dataReq
     const {updateType, receivingCode} = params
     const status = await prismaClient.receiving.findUniqueOrThrow({
         where: {
@@ -70,13 +74,50 @@ export default defineEventHandler(async (event) => {
                         code: receivingCode
                     },
                     data: {
+                        receivedDate: new Date(),
                         status: 2
                     }
                 })
             }
             break
-        case "update":
-
+        case "curdStock":
+            const {toCreate, toUpdate, toDelete} = stockReq
+            if (_.isArray(toCreate) && toCreate.length > 0){
+                await prismaClient.stock.createMany({
+                    data: toCreate.map(e => {
+                        return{
+                            ...e,
+                            createdBy: userAuthContext.getEmail(event)
+                        }
+                    })
+                })
+            }
+            if (_.isArray(toUpdate) && toUpdate.length > 0){
+                await Promise.all(toUpdate.map(async (stock) => {
+                    await prismaClient.stock.update({
+                        where: {
+                            id: stock.id
+                        },
+                        data: {
+                            inQuantity: stock.inQuantity,
+                            outQuantity: stock.outQuantity,
+                            productCode: stock.productCode,
+                            warehouseCode: stock.warehouseCode,
+                            receivingCode: stock.receivingCode,
+                            createdBy: userAuthContext.getEmail(event)
+                        }
+                    })
+                }))
+            }
+            if (_.isArray(toDelete) && toDelete.length > 0){
+                await prismaClient.stock.deleteMany({
+                    where: {
+                        id: {
+                            in: toDelete
+                        }
+                    }
+                })
+            }
             break
     }
 })
