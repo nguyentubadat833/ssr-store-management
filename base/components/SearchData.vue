@@ -4,11 +4,10 @@ const {
   isNonIcon,
   btnLabel,
   btnColor,
-  isDisabled,
   title,
   data,
   selectMulti
-} = defineProps(['icon', 'isNonIcon', 'btnColor', 'btnLabel', 'isDisabled', 'title', 'columns', 'data', 'selectMulti'])
+} = defineProps(['icon', 'isNonIcon', 'btnColor', 'btnLabel', 'title', 'columns', 'data', 'selectMulti'])
 const emit = defineEmits(['selected'])
 
 const isOpen = ref(false)
@@ -87,7 +86,7 @@ function clearSelect() {
   <div>
     <div @click="isOpen = true">
       <slot v-if="$slots.btn" name="btn"/>
-      <UButton v-else :disabled="isDisabled" :label="btnLabel || ''" :color="btnColor || undefined"
+      <UButton v-else :label="btnLabel || ''" :color="btnColor || undefined"
                :icon="btnIcon"/>
     </div>
     <UModal v-model="isOpen" :overlay="false">

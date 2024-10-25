@@ -1,4 +1,5 @@
 import {IPurchaseOrderParamsSelectReq} from "~/types/IPurchaseOrder";
+import purchaseOrderError from "~/server/utils/error/purchaseOrderError";
 
 export default defineEventHandler(async (event) => {
     const params: IPurchaseOrderParamsSelectReq = getQuery(event)
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event) => {
             })
             setResponseStatus(event, 204)
         } else {
-            return handlerError({isError: true, message: 'Đơn hàng đang tiến hành'}, event)
+            return purchaseOrderError.ordered(event)
         }
     } catch (error) {
         return handlerError(error, event)

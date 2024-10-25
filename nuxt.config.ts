@@ -15,7 +15,7 @@ export default defineNuxtConfig({
       secretId: process.env.NUXT_AUTH_GOOGLE_CLIENT_SECRET
     }
   },
-  modules: ["@prisma/nuxt", '@nuxt/ui', "nuxt-lodash"],
+  modules: ["@prisma/nuxt", '@nuxt/ui', "nuxt-lodash", 'nuxt-time'],
   prisma: {
     installStudio: false
   },

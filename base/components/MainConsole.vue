@@ -2,7 +2,8 @@
 import type {IMainConsoleData} from "~/types/client/IMainConsoleData";
 
 const {consoleData} = defineProps<{
-  consoleData: IMainConsoleData
+  consoleData: IMainConsoleData,
+  isBtnModalDisabled: boolean
 }>()
 
 async function deleteAction() {
@@ -48,7 +49,7 @@ function createAction() {
                 <UIcon name="ic:sharp-close" size="20" class="cursor-pointer hover:bg-gray-500"
                        @click="consoleData.isOpenModal.value = false"/>
               </div>
-              <div class="flex justify-end gap-4">
+              <div class="flex justify-end gap-4" :class="[{'pointer-events-none': isBtnModalDisabled ?? false}]">
                 <UTooltip text="Clear">
                   <UButton icon="ic:sharp-cleaning-services" @click="consoleData.clearState()"/>
                 </UTooltip>

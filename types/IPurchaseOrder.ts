@@ -16,6 +16,7 @@ export interface IPurchaseOrderDetailUpdate {
 export interface IPurchaseOrderDto {
     code?: string
     supplierCode: string
+    description?: string
     status?: number
     orderDate?: Date,
     dateOfReceipt?: Date,

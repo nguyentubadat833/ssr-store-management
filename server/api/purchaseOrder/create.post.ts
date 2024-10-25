@@ -12,6 +12,7 @@ export default defineEventHandler(async (event) => {
                 charset: 'numeric'
             }),
             supplierCode: data.supplierCode,
+            description: data.description,
             createdBy: userAuthContext.getEmail(event),
             details: {
                 create: _.isArray(details) && details.length > 0 ? details : undefined

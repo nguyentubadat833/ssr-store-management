@@ -6,6 +6,7 @@ export default defineEventHandler(async (event) => {
     const selectField = {
         code: true,
         supplierCode: true,
+        description: true,
         status: true,
         details: true,
         orderDate: true,

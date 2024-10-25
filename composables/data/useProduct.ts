@@ -20,7 +20,6 @@ export default function () {
         }
 
         getProductName(data: any, productCode: string) {
-            console.log('proudctData', data)
             if (isArray(data)) {
                 const find = data.find(e => e.code === productCode)
                 if (find) {

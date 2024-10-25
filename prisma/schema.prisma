@@ -88,9 +88,9 @@ model Product {
 
 model Stock {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  intQuantity   Int
+  inQuantity    Int
   outQuantity   Int?
-  status        Int       @default(1) // 0. Die, 1.Available
+  status        Int       @default(1) // 0. NoAvailable, 1.Available
   createdBy     String
   createdAt     DateTime  @default(now())
   lastUpdatedAt DateTime?
@@ -164,6 +164,7 @@ model PurchaseOrder {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   code          String    @unique
   supplierCode  String
+  description   String?
   status        Int       @default(0) // 0. Pending, 1. Ordered, 2. Received
   orderDate     DateTime?
   dateOfReceipt DateTime?

@@ -45,6 +45,7 @@ const {data: poData, refresh: refreshPoData} = await useAsyncData(poKey.poKeyDat
 const initialState: IPurchaseOrderDto = {
   code: '',
   supplierCode: '',
+  description: '',
   status: NaN,
   details: [] as IPurchaseOrderDetail[],
   orderDate: undefined,
@@ -53,6 +54,7 @@ const initialState: IPurchaseOrderDto = {
 
 const poCurrent = reactive<IPurchaseOrderDto>({...initialState})
 const poDetailToDelete = ref<string[]>([])
+const isPoPending = computed(() => poCurrent.status === 0)
 
 const columns = [{
   key: 'code',
@@ -63,15 +65,18 @@ const columns = [{
 }, {
   key: 'status',
   label: 'Status',
-  sort: true
+  sortable: true
 }, {
   key: 'orderDate',
   label: 'Order Date',
-  sort: true
+  sortable: true
 }, {
   key: 'dateOfReceipt',
   label: 'Date Of Receipt',
-  sort: true
+  sortable: true
+}, {
+  key: 'description',
+  label: 'Description',
 }]
 
 const sort = ref({
@@ -116,7 +121,6 @@ class ConsoleData extends IMainConsoleData {
   }
 
   mapState(object: any): void {
-    console.log(object)
     this.isOpenModal.value = true
     if (isObject(object)) {
       useAssign(poCurrent, object)
@@ -143,6 +147,7 @@ class ConsoleData extends IMainConsoleData {
         data: {
           code: poCurrent.code,
           supplierCode: poCurrent.supplierCode,
+          description: poCurrent.description,
           details: {
             toDelete: poDetailToDelete.value,
             toCreate: (poCurrent.details as IPurchaseOrderDetail[]).filter(e => !e.id),
@@ -164,17 +169,17 @@ function selectedSupplier(data: any) {
 
 function selectedProduct(data: any) {
   const addProducts: { code: string, name: string }[] = data
-  if (poCurrent.code) {
-    addProducts.forEach(e => {
-      (poCurrent.details as IPurchaseOrderDetail[]).push({
-        poCode: poCurrent.code,
-        productCode: e.code,
-        quantity: 0,
-        unitPrice: 0,
-        totalAmount: 0
-      } as IPurchaseOrderDetail)
-    })
-  }
+  // if (poCurrent.code) {
+  addProducts.forEach(e => {
+    (poCurrent.details as IPurchaseOrderDetail[]).push({
+      poCode: poCurrent.code,
+      productCode: e.code,
+      quantity: 0,
+      unitPrice: 0,
+      totalAmount: 0
+    } as IPurchaseOrderDetail)
+  })
+  // }
   console.log(data)
 }
 
@@ -185,11 +190,25 @@ function addDetailToDelete(index: number, row: IPurchaseOrderDetail) {
   }
 }
 
-async function cancelOrConfirmPo(type: 'cancel' | 'confirm') {
+async function cancelPo() {
   if (poCurrent.code) {
     await update({
       params: {
-        updateType: type,
+        updateType: 'cancel',
+        poCode: poCurrent.code
+      }
+    })
+    await refreshPoData()
+    consoleData.mapState(await selectByCode())
+  }
+}
+
+async function confirmPo() {
+  await consoleData.saveData()
+  if (poCurrent.code) {
+    await update({
+      params: {
+        updateType: 'confirm',
         poCode: poCurrent.code
       }
     })
@@ -202,25 +221,36 @@ async function cancelOrConfirmPo(type: 'cancel' | 'confirm') {
 
 <template>
   <div>
-    <MainConsole :console-data="consoleData">
+    <MainConsole :console-data="consoleData" :is-btn-modal-disabled="poCurrent.status">
       <UTable :columns="columns" :rows="poData || []" @select="consoleData.mapState($event)" :sort="sort"
               class="max-h-96">
+        <template #supplierCode-data="{row}">
+          {{ `${row.supplierCode} | ${getSupplierName(supplierData, row.supplierCode)}` }}
+        </template>
+        <template #status-data="{row}">{{ purchaseOrderStatus().map(row.status) }}</template>
+        <template #orderDate-data="{row}">
+          <NuxtTime v-if="row.orderDate" :datetime="row.orderDate" year="numeric" month="numeric" day="numeric"/>
+        </template>
+        <template #dateOfReceipt-data="{row}">
+          <NuxtTime v-if="row.dateOfReceipt" :datetime="row.dateOfReceipt" year="numeric" month="numeric"
+                    day="numeric"/>
+        </template>
       </UTable>
       <template #modalBody>
         <div class="flex items-center justify-between">
           <div>
-            <SearchData btn-label="Add Product" :is-non-icon="true" btn-color="white"
-                        :is-disabled="poCurrent.status !== 0 && poCurrent.code" :data="productData"
+            <SearchData title="Select Product" btn-label="Add Product" :is-non-icon="true" btn-color="white"
+                        :data="productData"
                         :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]" :select-multi="true"
-                        @selected="selectedProduct"/>
+                        @selected="selectedProduct" :class="[{'pointer-events-none': !isPoPending}]"/>
           </div>
           <div class="space-x-3">
-            <UButton label="Cancel" color="red" :disabled="poCurrent.status === 0"
-                     @click="cancelOrConfirmPo('cancel')"/>
-            <UButton label="Confirm" :disabled="poCurrent.status === 1" @click="cancelOrConfirmPo('confirm')"/>
+            <UButton label="Cancel" color="red"
+                     @click="cancelPo" :disabled="!poCurrent.status"/>
+            <UButton label="Order" @click="confirmPo" :disabled="poCurrent.status === 1"/>
           </div>
         </div>
-        <UForm :state="poCurrent" class="space-y-5">
+        <UForm :state="poCurrent" class="space-y-5" :class="[{'pointer-events-none': !isPoPending && poCurrent.code}]">
           <UFormGroup label="Code" name="code">
             <UInput disabled v-model="poCurrent.code"/>
           </UFormGroup>
@@ -228,7 +258,8 @@ async function cancelOrConfirmPo(type: 'cancel' | 'confirm') {
             <div class="flex justify-between gap-2">
               <UInput disabled v-model="poCurrent.supplierCode" class="w-full"/>
               <UInput disabled :model-value="getSupplierName(supplierData, poCurrent.supplierCode)" class="w-full"/>
-              <SearchData :data="supplierData" :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]"
+              <SearchData title="Select Supplier" :data="supplierData"
+                          :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]"
                           @selected="selectedSupplier"/>
             </div>
           </UFormGroup>
@@ -237,13 +268,30 @@ async function cancelOrConfirmPo(type: 'cancel' | 'confirm') {
                      value-attribute="status"/>
           </UFormGroup>
           <UFormGroup label="Order Date" name="orderDate">
-            <UInput disabled v-model="poCurrent.orderDate" type="date"/>
+            <NuxtTime v-if="poCurrent.orderDate" :datetime="poCurrent.orderDate" year="numeric" month="numeric"
+                      day="numeric"/>
           </UFormGroup>
           <UFormGroup label="Date Of Receipt" name="dateOfReceipt">
-            <UInput disabled v-model="poCurrent.dateOfReceipt" type="date"/>
+            <NuxtTime v-if="poCurrent.dateOfReceipt" :datetime="poCurrent.dateOfReceipt" year="numeric" month="numeric"
+                      day="numeric"/>
+          </UFormGroup>
+          <UFormGroup label="Description" name="description">
+            <UTextarea
+                autoresize
+                v-model="poCurrent.description"
+            />
           </UFormGroup>
           <UTable :columns="poDetailColumns" :rows="poCurrent.details || []"
                   class="max-h-80">
+            <template #quantity-data="{row}">
+              <UInput v-model="row.quantity" type="number"/>
+            </template>
+            <template #unitPrice-data="{row}">
+              <UInput v-model="row.unitPrice" type="number"/>
+            </template>
+            <template #totalAmount-data="{row}">
+              <UInput v-model="row.totalAmount" type="number"/>
+            </template>
             <template #productCode-data="{row, index}">
               <span>{{ getProductName(productData, row?.productCode) }}</span>
             </template>
@@ -255,7 +303,6 @@ async function cancelOrConfirmPo(type: 'cancel' | 'confirm') {
             </template>
           </UTable>
         </UForm>
-
       </template>
     </MainConsole>
   </div>
