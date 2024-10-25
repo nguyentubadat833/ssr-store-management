@@ -11,9 +11,7 @@ export default defineEventHandler(async (event) => {
             }),
             poCode: body.poCode,
             createdBy: userAuthContext.getEmail(event),
-            stocks: {
-                // create:
-            }
         }
     })
+    return response.code
 })
