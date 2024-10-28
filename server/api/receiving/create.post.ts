@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
         await prismaClient.stock.createMany({
             data: body.stocks.map(e => {
                 return {
-                    inQuantity: e.inQuantity,
+                    inQuantity: e.inQuantity || 0,
                     productCode: e.productCode,
                     warehouseCode: e.warehouseCode,
                     receivingCode: response.code,

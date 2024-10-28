@@ -4,7 +4,6 @@ import {
     IPurchaseOrderParamsUpdateReq
 } from "~/types/IPurchaseOrder";
 import _ from 'lodash'
-import {IResponseErrorObject} from "~/types/IResponse";
 import purchaseOrderError from "~/server/utils/error/purchaseOrderError";
 
 export default defineEventHandler(async (event) => {
@@ -80,7 +79,7 @@ export default defineEventHandler(async (event) => {
                             data: {
                                 poCode: poDetail.poCode,
                                 productCode: poDetail.productCode,
-                                quantity: poDetail.quantity,
+                                quantity: poDetail.quantity || 0,
                                 unitPrice: poDetail.unitPrice,
                                 totalAmount: poDetail.totalAmount
                             }

@@ -157,6 +157,7 @@ class ConsoleData extends IMainConsoleData {
       } else {
         const code = await create(receivingCurrent)
         if (code) {
+          receivingCurrent.code = code
           await receivingRefresh()
           this.mapState(await this.selectByCode())
         }
@@ -168,6 +169,7 @@ class ConsoleData extends IMainConsoleData {
 const consoleData = new ConsoleData()
 
 function selectedPo(data: IPurchaseOrderDto[]) {
+
   const dataSelected = data[0]
   receivingCurrent.poCode = dataSelected.code ?? ''
   receivingCurrent.stocks = (dataSelected.details as IPurchaseOrderDetailUseReceiving[]).map(e => {
@@ -302,8 +304,11 @@ const timelineItems = computed<ITimelineElement[]>(() => {
                         day="numeric"/>
             </UFormGroup>
           </UForm>
-          <UTable :columns="inStockDetailColumns" :rows="receivingCurrent.stocks" class="max-h-96"
+          <UTable :columns="inStockDetailColumns" :rows="receivingCurrent.stocks" class="max-h-96" :class="[{'pointer-events-none': receivingCurrent.status === 2 || !receivingCurrent.code}]"
           >
+            <template #productName-data="{row}">
+              {{getProductName(productData, row?.productCode)}}
+            </template>
             <template #warehouseCode-data="{row, index}">
               <USelect v-model="row.warehouseCode" :options="warehouseData" option-attribute="name"
                        value-attribute="code" @change="selectedWarehouseRow"/>

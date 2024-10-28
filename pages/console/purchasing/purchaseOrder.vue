@@ -258,7 +258,7 @@ const timelineItems: ITimelineElement[] = purchaseOrderStatus().data.map(e => {
               <UInput disabled v-model="poCurrent.supplierCode" class="w-full"/>
               <UInput disabled :model-value="getSupplierName(supplierData, poCurrent.supplierCode)" class="w-full"/>
               <SearchData title="Select Supplier" :data="supplierData"
-                          :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]"
+                          :columns="[{key: 'info.name', label: 'Name'}, {key: 'code', label: 'Code'}]"
                           @selected="selectedSupplier"/>
             </div>
           </UFormGroup>
