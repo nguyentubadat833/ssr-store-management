@@ -12,6 +12,7 @@ definePageMeta({
   layout: 'console',
   isAuth: true,
   isConsoleMenu: true,
+  groupMenu: 'warehouse',
   pageName: {
     en: 'Receiving management'
   }
@@ -141,13 +142,11 @@ class ConsoleData extends IMainConsoleData {
     await receivingRefresh()
   }
 
-  async selectByCode() {
-    if (receivingCurrent.code) {
-      return await select({
-        selectType: 'byCode',
-        receivingCode: receivingCurrent.code
-      })
-    }
+  async selectByCode(code: string) {
+    return await select({
+      selectType: 'byCode',
+      receivingCode: code
+    })
   }
 
   async saveData(): Promise<void> {
@@ -157,9 +156,8 @@ class ConsoleData extends IMainConsoleData {
       } else {
         const code = await create(receivingCurrent)
         if (code) {
-          receivingCurrent.code = code
           await receivingRefresh()
-          this.mapState(await this.selectByCode())
+          this.mapState(await this.selectByCode(code))
         }
       }
     }
@@ -217,8 +215,10 @@ async function changeStatus(input?: number) {
       })
       break
   }
-  consoleData.mapState(await consoleData.selectByCode())
-  await consoleData.refreshData()
+  if (receivingCurrent.code){
+    consoleData.mapState(await consoleData.selectByCode(receivingCurrent.code))
+    await consoleData.refreshData()
+  }
 }
 
 function addProducts(data: IProductInfo[]) {
@@ -278,7 +278,8 @@ const timelineItems = computed<ITimelineElement[]>(() => {
       </UTable>
       <template #modalHeader>
         <div class="flex justify-center gap-2">
-          <Timeline v-if="receivingCurrent.code" :elements="timelineItems" v-model:active-index="receivingCurrent.status"/>
+          <Timeline v-if="receivingCurrent.code" :elements="timelineItems"
+                    v-model:active-index="receivingCurrent.status"/>
         </div>
       </template>
       <template #modalBody>
@@ -304,10 +305,11 @@ const timelineItems = computed<ITimelineElement[]>(() => {
                         day="numeric"/>
             </UFormGroup>
           </UForm>
-          <UTable :columns="inStockDetailColumns" :rows="receivingCurrent.stocks" class="max-h-96" :class="[{'pointer-events-none': receivingCurrent.status === 2 || !receivingCurrent.code}]"
+          <UTable :columns="inStockDetailColumns" :rows="receivingCurrent.stocks" class="max-h-96"
+                  :class="[{'pointer-events-none': receivingCurrent.status === 2 || !receivingCurrent.code}]"
           >
             <template #productName-data="{row}">
-              {{getProductName(productData, row?.productCode)}}
+              {{ getProductName(productData, row?.productCode) }}
             </template>
             <template #warehouseCode-data="{row, index}">
               <USelect v-model="row.warehouseCode" :options="warehouseData" option-attribute="name"

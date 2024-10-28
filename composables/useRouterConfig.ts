@@ -1,3 +1,5 @@
+import type {IRouterInfo} from "~/types/client/IRouterInfo";
+
 interface IPageName {
     [key: string]: string
 }
@@ -13,8 +15,9 @@ export default function () {
             return {
                 name: (route.meta.pageName as IPageName)?.[`${langCurrent.value}`],
                 link: route.meta.name || route.path,
-                order: typeof route.meta?.order === 'number' ? route.meta.order : undefined
-            }
+                order: typeof route.meta?.order === 'number' ? route.meta.order : undefined,
+                group: route.meta?.groupMenu || undefined,
+            } as IRouterInfo
         }).sort((a, b) => {
             if (a.order !== undefined && b.order !== undefined) {
                 return a.order - b.order;

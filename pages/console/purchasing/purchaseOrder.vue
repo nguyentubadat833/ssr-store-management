@@ -9,6 +9,7 @@ definePageMeta({
   layout: 'console',
   isAuth: true,
   isConsoleMenu: true,
+  groupMenu: 'purchasing',
   pageName: {
     en: 'Purchase Order management'
   }

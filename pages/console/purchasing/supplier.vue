@@ -6,6 +6,7 @@ definePageMeta({
   layout: 'console',
   isAuth: true,
   isConsoleMenu: true,
+  groupMenu: 'purchasing',
   pageName: {
     en: 'Supplier management'
   }

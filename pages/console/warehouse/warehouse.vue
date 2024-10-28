@@ -1,6 +1,5 @@
 <script setup lang="ts">
 
-
 import type {IWarehouseDto} from "~/types/IWarehouse";
 import {IMainConsoleData} from "~/types/client/IMainConsoleData";
 
@@ -8,6 +7,7 @@ definePageMeta({
   layout: 'console',
   isAuth: true,
   isConsoleMenu: true,
+  groupMenu: 'warehouse',
   pageName: {
     en: 'Warehouse management'
   }
