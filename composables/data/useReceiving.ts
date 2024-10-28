@@ -1,5 +1,6 @@
 import type {IApiCurd} from "~/types/client/IApiCurd";
 import type {
+    IReceivingDeleteReq,
     IReceivingDto,
     IReceivingParamsSelectReq,
     IReceivingUpdateReq
@@ -25,7 +26,7 @@ export default function () {
                 },
                 {
                     status: 2,
-                    name: 'Imported'
+                    name: 'Completed'
                 },
             ]
             function map(status: number) {
@@ -73,6 +74,14 @@ export default function () {
                 method: 'PUT',
                 params: req.params,
                 body: req.body
+            })
+        }
+
+        async del(req: IReceivingDeleteReq) {
+            await useAPI({
+                endpoint: '/api/receiving/delete',
+                method: 'DELETE',
+                params: req
             })
         }
     }

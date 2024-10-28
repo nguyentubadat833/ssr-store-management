@@ -1,12 +1,13 @@
 import type {Notification} from "#ui/types/notification";
 
-const id = ref(0)
 export interface IToastOptions {
-    type: 'success' | 'error'
-    successTitle?: string
-    errorTitle?: string
-    successIcon?: string
-    errorIcon?: string
+    type: 'success' | 'info' | 'error'
+    title?: string
+    icon?: string
+    // successTitle?: string
+    // errorTitle?: string
+    // successIcon?: string
+    // errorIcon?: string
     description?: string
     timeout?: number
     actions?: any[]
@@ -14,29 +15,40 @@ export interface IToastOptions {
 
 function getToastObject({
                             type = 'success',
-                            successTitle = 'Success',
-                            errorTitle = 'Error',
-                            successIcon = 'i-heroicons-check-circle',
-                            errorIcon = 'i-heroicons-x-circle-20-solid',
+                            title = undefined,
+                            icon = undefined,
+                            // successTitle = 'Success',
+                            // errorTitle = 'Error',
+                            // successIcon = 'i-heroicons-check-circle',
+                            // errorIcon = 'i-heroicons-x-circle-20-solid',
                             description,
                             timeout = 2000,
-                            actions,
+                            actions = undefined,
                         }: IToastOptions) {
     const id = ref(0)
-    let object: Partial<Notification>  = {
+    let object: Partial<Notification> = {
         id: `${++id.value}`,
         timeout: timeout,
         description: description
     }
     switch (type) {
         case 'success':
-            object.title = successTitle
-            object.icon = successIcon
+            // object.title = successTitle
+            // object.icon = successIcon
+            object.title = title || 'Success'
+            object.icon = icon || 'i-heroicons-check-circle'
             object.color = 'green'
             break
+        case "info":
+            object.title = title || 'Information'
+            object.icon = icon || 'ic:baseline-info'
+            object.color = 'blue'
+            break
         case 'error':
-            object.title = errorTitle
-            object.icon = errorIcon
+            // object.title = errorTitle
+            // object.icon = errorIcon
+            object.title = title || 'Error'
+            object.icon = icon || 'i-heroicons-x-circle-20-solid'
             object.color = 'red'
             break
         default:

@@ -42,7 +42,10 @@ function createAction() {
       <UModal v-model="consoleData.isOpenModal.value" :ui="{width: 'md:max-w-screen-md'}">
         <div @keyup.enter="consoleData.saveData()">
           <div class="p-4 space-y-6 ">
+            <slot name="modalHeader"/>
+            <UDivider v-if="$slots.modalHeader"/>
             <slot name="modalBody"/>
+            <UDivider/>
             <div class="flex justify-between items-center gap-4">
               <div class="flex justify-start ">
                 <UIcon name="ic:sharp-close" size="20" class="cursor-pointer hover:bg-gray-500"

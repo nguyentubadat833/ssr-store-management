@@ -5,6 +5,8 @@ import type {IStockDto} from "~/types/IStock";
 import {IMainConsoleData} from "~/types/client/IMainConsoleData";
 import type {IPurchaseOrderDetailUseReceiving, IPurchaseOrderDto} from "~/types/IPurchaseOrder";
 import type {IWarehouseDto} from "~/types/IWarehouse";
+import type {IProductDto} from "~/types/IProduct";
+import type {ITimelineElement} from "~/types/client/ITimelineElement";
 
 definePageMeta({
   layout: 'console',
@@ -20,9 +22,28 @@ interface IWarehouseInfo {
   name: string
 }
 
-const {data: receivingFetchData, create, update, select, keyData, receivingStatus} = useReceiving()
+interface IProductInfo {
+  code: string,
+  name: string
+}
+
+const toast = useToast()
+const notification = useNotification
+const {data: receivingFetchData, create, update, del, select, keyData, receivingStatus} = useReceiving()
 const {select: selectPo} = usePurchaseOrder()
 const {data: warehouseFetchData, keyData: warehouseKey} = useWarehouse()
+const {data: productFetchData, keyData: productKey, getProductName} = useProduct()
+
+const {data: productData} = await useLazyAsyncData(productKey.productKeyData, () => productFetchData(), {
+  transform(value: IProductDto[]) {
+    return value.map(e => {
+      return {
+        code: e.code,
+        name: e.name
+      } as IProductInfo
+    })
+  }
+})
 const {
   data: receivingData,
   refresh: receivingRefresh
@@ -40,8 +61,6 @@ const {data: warehouseData} = await useAsyncData(warehouseKey.warehouseKeyData, 
 const {data: poDataOrdered} = useLazyAsyncData('po-many-ordered', () => selectPo({
   selectType: "manyOrdered"
 }))
-console.log(receivingData.value)
-console.log(poDataOrdered.value)
 
 const initialState: IReceivingDto = {
   code: '',
@@ -52,7 +71,6 @@ const initialState: IReceivingDto = {
 }
 
 const receivingCurrent = reactive<IReceivingDto>({...initialState})
-const warehouseCurrent = ref()
 
 const receivingColumns = [{
   key: 'code',
@@ -103,12 +121,16 @@ class ConsoleData extends IMainConsoleData {
     useAssign(receivingCurrent, initialState)
   }
 
-  deleteData(): Promise<void> {
-    return Promise.resolve(undefined);
+  async deleteData(): Promise<void> {
+    if (receivingCurrent.code) {
+      await del({
+        receivingCode: receivingCurrent.code
+      })
+      await this.refreshData()
+    }
   }
 
   mapState(object: any): void {
-    console.log(object)
     this.isOpenModal.value = true
     if (isObject(object)) {
       useAssign(receivingCurrent, object)
@@ -129,13 +151,15 @@ class ConsoleData extends IMainConsoleData {
   }
 
   async saveData(): Promise<void> {
-    if (receivingCurrent.code) {
+    if (receivingCurrent.poCode) {
+      if (receivingCurrent.code) {
 
-    } else {
-      const code = await create(receivingCurrent)
-      if (code) {
-        await receivingRefresh()
-        this.mapState(await this.selectByCode())
+      } else {
+        const code = await create(receivingCurrent)
+        if (code) {
+          await receivingRefresh()
+          this.mapState(await this.selectByCode())
+        }
       }
     }
   }
@@ -144,7 +168,6 @@ class ConsoleData extends IMainConsoleData {
 const consoleData = new ConsoleData()
 
 function selectedPo(data: IPurchaseOrderDto[]) {
-  console.log(data)
   const dataSelected = data[0]
   receivingCurrent.poCode = dataSelected.code ?? ''
   receivingCurrent.stocks = (dataSelected.details as IPurchaseOrderDetailUseReceiving[]).map(e => {
@@ -159,47 +182,79 @@ function selectedPo(data: IPurchaseOrderDto[]) {
   })
 }
 
-function acceptWarehouseAll() {
-  if (receivingCurrent.stocks.length > 0 && warehouseCurrent.value){
-    receivingCurrent.stocks.forEach(e => {
-      e.warehouseCode = warehouseCurrent.value
-    })
+function acceptWarehouseAll(warehouseCode: string) {
+  receivingCurrent.stocks.forEach(e => {
+    e.warehouseCode = warehouseCode
+  })
+}
+
+async function changeStatus(input?: number) {
+  switch (input) {
+    case 0:
+      await update(<IReceivingUpdateReq>{
+        params: {
+          updateType: 'cancel',
+          receivingCode: receivingCurrent.code
+        }
+      })
+      break
+    case 1:
+      await update(<IReceivingUpdateReq>{
+        params: {
+          updateType: 'progress',
+          receivingCode: receivingCurrent.code
+        }
+      })
+      break
+    case 2:
+      await update(<IReceivingUpdateReq>{
+        params: {
+          updateType: 'imported',
+          receivingCode: receivingCurrent.code
+        }
+      })
+      break
+  }
+  consoleData.mapState(await consoleData.selectByCode())
+  await consoleData.refreshData()
+}
+
+function addProducts(data: IProductInfo[]) {
+  const selected = data[0]
+  if (selected) {
+    receivingCurrent.stocks.push({
+      receivingCode: receivingCurrent.code,
+      productName: selected.name,
+      productCode: selected.code,
+      orderQuantity: 0,
+      inQuantity: 0,
+      warehouseCode: ''
+    } as IStockDto)
   }
 }
 
-async function startImport() {
-  await update(<IReceivingUpdateReq>{
-    params: {
-      updateType: 'progress',
-      receivingCode: receivingCurrent.code
-    }
+function selectedWarehouseRow(data: any) {
+  const toastObject = notification.getToastObject({
+    type: 'info',
+    title: `Selected ${data}`,
+    timeout: 2000,
+    actions: [{
+      label: 'Apply to all records',
+      click: () => acceptWarehouseAll(data)
+    }]
   })
-  consoleData.mapState(await consoleData.selectByCode())
-  await consoleData.refreshData()
+  toast.add(toastObject)
 }
 
-async function cancelImport() {
-  await update(<IReceivingUpdateReq>{
-    params: {
-      updateType: 'cancel',
-      receivingCode: receivingCurrent.code
+const timelineItems = computed<ITimelineElement[]>(() => {
+  return receivingStatus().data.map(e => {
+    return {
+      label: e.name,
+      order: e.status,
+      action: () => changeStatus(e.status)
     }
-  })
-  consoleData.mapState(await consoleData.selectByCode())
-  await consoleData.refreshData()
-}
-
-
-async function completeImport() {
-  await update(<IReceivingUpdateReq>{
-    params: {
-      updateType: 'imported',
-      receivingCode: receivingCurrent.code
-    }
-  })
-  consoleData.mapState(await consoleData.selectByCode())
-  await consoleData.refreshData()
-}
+  }) as ITimelineElement[]
+})
 
 </script>
 
@@ -209,57 +264,60 @@ async function completeImport() {
       <UTable :columns="receivingColumns" :rows="receivingData || []" @select="consoleData.mapState($event)"
               class="max-h-96">
         <template #status-data="{row}">
-          <span :class="[{'bg-green-300': row.status === 1}, {'bg-blue-300': row.status === 2}]">{{receivingStatus().map(row.status)}}</span>
+          <span
+              :class="[{'bg-green-300': row.status === 1}, {'bg-blue-300': row.status === 2}]">{{
+              receivingStatus().map(row.status)
+            }}</span>
+        </template>
+        <template #receivedDate-data="{row}">
+          <NuxtTime v-if="row.receivedDate" :datetime="row.receivedDate" year="numeric" month="numeric"
+                    day="numeric"/>
         </template>
       </UTable>
+      <template #modalHeader>
+        <div class="flex justify-center gap-2">
+          <Timeline v-if="receivingCurrent.code" :elements="timelineItems" v-model:active-index="receivingCurrent.status"/>
+        </div>
+      </template>
       <template #modalBody>
-        <div class="flex justify-between gap-2">
-          <div class="flex justify-start gap-2">
-            <UButton :disabled="!receivingCurrent.code || !receivingCurrent.status" label="Cancel Cancel" color="red" @click="cancelImport"/>
-            <UButton :disabled="!receivingCurrent.code || receivingCurrent.status > 0" label="Start import" @click="startImport"/>
-          </div>
-          <div class="flex justify-end gap-2">
-            <UButton :disabled="!receivingCurrent.code || !receivingCurrent.status || receivingCurrent.status === 2" label="Complete" color="blue" @click="completeImport"/>
+        <div :class="[{'pointer-events-none': receivingCurrent.status === 2}]" class="space-y-3">
+          <UForm :state="receivingCurrent" class="space-y-5">
+            <UFormGroup label="Code" name="code">
+              <UInput disabled v-model="receivingCurrent.code"/>
+            </UFormGroup>
+            <UFormGroup label="Purchase Order" name="poCode">
+              <div class="flex justify-between gap-2">
+                <UInput disabled v-model="receivingCurrent.poCode" class="w-full"/>
+                <SearchData title="Select Purchase Order" :columns="searchPoColumns" :data="poDataOrdered"
+                            @selected="selectedPo"/>
+              </div>
+            </UFormGroup>
+            <UFormGroup label="Status" name="status">
+              <USelect disabled v-model="receivingCurrent.status" :options="receivingStatus().data"
+                       option-attribute="name" value-attribute="status"/>
+            </UFormGroup>
+            <UFormGroup label="Received Date" name="receivedDate">
+              <NuxtTime v-if="receivingCurrent.receivedDate" :datetime="receivingCurrent.receivedDate" year="numeric"
+                        month="numeric"
+                        day="numeric"/>
+            </UFormGroup>
+          </UForm>
+          <UTable :columns="inStockDetailColumns" :rows="receivingCurrent.stocks" class="max-h-96"
+          >
+            <template #warehouseCode-data="{row, index}">
+              <USelect v-model="row.warehouseCode" :options="warehouseData" option-attribute="name"
+                       value-attribute="code" @change="selectedWarehouseRow"/>
+            </template>
+            <template #inQuantity-data="{row}">
+              <UInput v-model="row.inQuantity" type="number"/>
+            </template>
+          </UTable>
+          <div class="flex items-center justify-end">
+            <SearchData title="Select Product" btn-label="Add product" :data="productData" @selected="addProducts"
+                        :select-multi="true"/>
           </div>
         </div>
-        <UForm :state="receivingCurrent" class="space-y-5">
-          <UFormGroup label="Code" name="code">
-            <UInput disabled v-model="receivingCurrent.code"/>
-          </UFormGroup>
-          <UFormGroup label="Purchase Order" name="poCode">
-            <div class="flex justify-between gap-2">
-              <UInput disabled v-model="receivingCurrent.poCode" class="w-full"/>
-              <SearchData title="Select Purchase Order" :columns="searchPoColumns" :data="poDataOrdered"
-                          @selected="selectedPo"/>
-            </div>
-          </UFormGroup>
-          <UFormGroup label="Status" name="status">
-            <USelect disabled v-model="receivingCurrent.status" :options="receivingStatus().data"
-                     option-attribute="name" value-attribute="status"/>
-          </UFormGroup>
 
-          <UFormGroup label="Received Date" name="receivedDate">
-            <NuxtTime v-if="receivingCurrent.receivedDate" :datetime="receivingCurrent.receivedDate" year="numeric"
-                      month="numeric"
-                      day="numeric"/>
-          </UFormGroup>
-        </UForm>
-        <UTable :columns="inStockDetailColumns" :rows="receivingCurrent.stocks" class="max-h-96" :class="[{'pointer-events-none': receivingCurrent.status !== 1}]">
-          <template #warehouseCode-data="{row}">
-            <USelect v-model="row.warehouseCode" :options="warehouseData" option-attribute="name"
-                     value-attribute="code"/>
-          </template>
-          <template #inQuantity-data="{row}">
-            <UInput v-model="row.inQuantity" type="number"/>
-          </template>
-        </UTable>
-        <UFormGroup v-if="receivingCurrent.stocks.length > 0" label="Select Warehouse">
-          <div class="flex justify-between gap-2">
-            <USelect v-model="warehouseCurrent" :options="warehouseData" option-attribute="name"
-                     value-attribute="code" class="w-full"/>
-            <UButton label="Accept all" @click="acceptWarehouseAll"/>
-          </div>
-        </UFormGroup>
       </template>
     </MainConsole>
   </div>

@@ -3,6 +3,7 @@ import type {IPurchaseOrderDetail, IPurchaseOrderDetailUpdate, IPurchaseOrderDto
 import {IMainConsoleData} from "~/types/client/IMainConsoleData";
 import type {ISupplierDto} from "~/types/ISupplier";
 import type {IProductDto} from "~/types/IProduct";
+import type {ITimelineElement} from "~/types/client/ITimelineElement";
 
 definePageMeta({
   layout: 'console',
@@ -169,7 +170,6 @@ function selectedSupplier(data: any) {
 
 function selectedProduct(data: any) {
   const addProducts: { code: string, name: string }[] = data
-  // if (poCurrent.code) {
   addProducts.forEach(e => {
     (poCurrent.details as IPurchaseOrderDetail[]).push({
       poCode: poCurrent.code,
@@ -179,7 +179,6 @@ function selectedProduct(data: any) {
       totalAmount: 0
     } as IPurchaseOrderDetail)
   })
-  // }
   console.log(data)
 }
 
@@ -190,32 +189,38 @@ function addDetailToDelete(index: number, row: IPurchaseOrderDetail) {
   }
 }
 
-async function cancelPo() {
+async function changeStatus(input?: number) {
   if (poCurrent.code) {
-    await update({
-      params: {
-        updateType: 'cancel',
-        poCode: poCurrent.code
-      }
-    })
+    switch (input) {
+      case 0:
+        await update({
+          params: {
+            updateType: 'cancel',
+            poCode: poCurrent.code
+          }
+        })
+        break
+      case 1:
+        await update({
+          params: {
+            updateType: 'confirm',
+            poCode: poCurrent.code
+          }
+        })
+        break
+    }
     await refreshPoData()
     consoleData.mapState(await selectByCode())
   }
 }
 
-async function confirmPo() {
-  await consoleData.saveData()
-  if (poCurrent.code) {
-    await update({
-      params: {
-        updateType: 'confirm',
-        poCode: poCurrent.code
-      }
-    })
-    await refreshPoData()
-    consoleData.mapState(await selectByCode())
-  }
-}
+const timelineItems: ITimelineElement[] = purchaseOrderStatus().data.map(e => {
+  return {
+    label: e.name,
+    order: e.status,
+    action: () => changeStatus(e.status)
+  } as ITimelineElement
+})
 
 </script>
 
@@ -227,7 +232,9 @@ async function confirmPo() {
         <template #supplierCode-data="{row}">
           {{ `${row.supplierCode} | ${getSupplierName(supplierData, row.supplierCode)}` }}
         </template>
-        <template #status-data="{row}">{{ purchaseOrderStatus().map(row.status) }}</template>
+        <template #status-data="{row}">
+          <span :class="[{'bg-green-300': row.status === 1}, {'bg-blue-300': row.status === 2}]">{{ purchaseOrderStatus().map(row.status) }}</span>
+        </template>
         <template #orderDate-data="{row}">
           <NuxtTime v-if="row.orderDate" :datetime="row.orderDate" year="numeric" month="numeric" day="numeric"/>
         </template>
@@ -236,20 +243,12 @@ async function confirmPo() {
                     day="numeric"/>
         </template>
       </UTable>
-      <template #modalBody>
-        <div class="flex items-center justify-between">
-          <div>
-            <SearchData title="Select Product" btn-label="Add Product" :is-non-icon="true" btn-color="white"
-                        :data="productData"
-                        :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]" :select-multi="true"
-                        @selected="selectedProduct" :class="[{'pointer-events-none': !isPoPending && poCurrent.code}]"/>
-          </div>
-          <div class="space-x-3">
-            <UButton label="Cancel" color="red"
-                     @click="cancelPo" :disabled="!poCurrent.status"/>
-            <UButton label="Order" @click="confirmPo" :disabled="poCurrent.status === 1"/>
-          </div>
+      <template #modalHeader>
+        <div class="flex items-center justify-center">
+          <Timeline :elements="timelineItems" v-model:active-index="poCurrent.status"/>
         </div>
+      </template>
+      <template #modalBody>
         <UForm :state="poCurrent" class="space-y-5" :class="[{'pointer-events-none': !isPoPending && poCurrent.code}]">
           <UFormGroup label="Code" name="code">
             <UInput disabled v-model="poCurrent.code"/>
@@ -302,6 +301,12 @@ async function confirmPo() {
               </div>
             </template>
           </UTable>
+          <div class="flex justify-end">
+            <SearchData title="Select Product" btn-label="Add Product" :is-non-icon="true" btn-color="white"
+                        :data="productData"
+                        :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]" :select-multi="true"
+                        @selected="selectedProduct" :class="[{'pointer-events-none': !isPoPending && poCurrent.code}]"/>
+          </div>
         </UForm>
       </template>
     </MainConsole>
