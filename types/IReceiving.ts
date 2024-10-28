@@ -5,6 +5,7 @@ export interface IReceivingDto {
     poCode: string
     status?: number
     receivedDate?: Date
+    stocks: IStockDto[]
 }
 
 export interface IReceivingParamsUpdateReq {
@@ -18,11 +19,11 @@ export interface IReceivingBodyReq {
 
 export interface IReceivingUpdateReq {
     params: IReceivingParamsUpdateReq,
-    body: IReceivingBodyReq
+    body?: IReceivingBodyReq
 }
 
 export interface IReceivingParamsSelectReq {
-    selectType: 'many' | 'byCode',
+    selectType: 'many' | 'byCode' | 'getStockData',
     receivingCode?: string
 }
 

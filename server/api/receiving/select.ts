@@ -25,5 +25,11 @@ export default defineEventHandler(async (event) => {
             }).catch(error => {
                 return handlerError(error, event)
             })
+        case "getStockData":
+            return prismaClient.stock.findMany({
+                where: {
+                    receivingCode: receivingCode
+                }
+            })
     }
 })

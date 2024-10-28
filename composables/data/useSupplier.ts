@@ -11,10 +11,11 @@ export default function () {
         }
 
         getSupplierName(data: any, supplierCode: string) {
+            console.log(data)
             if (isArray(data)) {
                 const find = data.find(e => e.code === supplierCode)
                 if (find) {
-                    return find?.name
+                    return find?.info.name
                 }
             }
             return ''

@@ -7,6 +7,12 @@ export interface IPurchaseOrderDetail {
     totalAmount: number
 }
 
+export interface IPurchaseOrderDetailUseReceiving {
+    productCode: string
+    productName: string,
+    quantity: number,
+}
+
 export interface IPurchaseOrderDetailUpdate {
     toCreate?: IPurchaseOrderDetail[]
     toUpdate?: IPurchaseOrderDetail[]
@@ -16,15 +22,16 @@ export interface IPurchaseOrderDetailUpdate {
 export interface IPurchaseOrderDto {
     code?: string
     supplierCode: string
+    supplierName?: string
     description?: string
     status?: number
     orderDate?: Date,
     dateOfReceipt?: Date,
-    details?: IPurchaseOrderDetail[] | IPurchaseOrderDetailUpdate
+    details?: IPurchaseOrderDetail[] | IPurchaseOrderDetailUpdate | IPurchaseOrderDetailUseReceiving[]
 }
 
 export interface IPurchaseOrderParamsSelectReq {
-    selectType: 'many' | 'byCode',
+    selectType: 'many' | 'manyOrdered' | 'byCode',
     poCode?: string
 }
 

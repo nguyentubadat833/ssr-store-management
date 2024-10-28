@@ -30,11 +30,11 @@ const {data: productData} = useLazyAsyncData(productKey.productKeyData, () => pr
 })
 const {data: supplierData} = await useAsyncData(supplierKey.supplierKeyData, () => supplierFetch(), {
   transform: (value: ISupplierDto[]) => {
-    let result: { code: string | undefined, name: string }[] = []
+    let result: { code: string | undefined, info: any }[] = []
     value.forEach(el => {
       result.push({
         code: el.code,
-        name: el.info?.name
+        info: el.info
       })
     })
     return result

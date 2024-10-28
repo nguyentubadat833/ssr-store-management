@@ -52,10 +52,11 @@ export default function () {
             })
         }
 
-        async select(req: IPurchaseOrderParamsSelectReq): Promise<IPurchaseOrderDto> {
+        async select(req: IPurchaseOrderParamsSelectReq): Promise<any> {
             return await useAPI({
                 endpoint: '/api/purchaseOrder/select',
-                params: req
+                params: req,
+                isShowSuccessMessage: false
             })
         }
 

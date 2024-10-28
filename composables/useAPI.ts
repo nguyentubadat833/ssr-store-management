@@ -60,6 +60,7 @@ export default async function ({
             }
         },
         onResponse({response, request}) {
+            // console.log(response)
             if (isUseDefaultProcessOnResponse) {
                 if (response.ok) {
                     result = response._data

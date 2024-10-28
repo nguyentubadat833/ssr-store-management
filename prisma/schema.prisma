@@ -90,7 +90,7 @@ model Stock {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   inQuantity    Int
   outQuantity   Int?
-  status        Int       @default(1) // 0. NoAvailable, 1.Available
+  status        Int       @default(0) // 0. NoAvailable, 1.Available
   createdBy     String
   createdAt     DateTime  @default(now())
   lastUpdatedAt DateTime?

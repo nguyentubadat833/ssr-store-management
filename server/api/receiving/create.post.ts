@@ -13,5 +13,18 @@ export default defineEventHandler(async (event) => {
             createdBy: userAuthContext.getEmail(event),
         }
     })
+    if (body.stocks.length > 0) {
+        await prismaClient.stock.createMany({
+            data: body.stocks.map(e => {
+                return {
+                    inQuantity: e.inQuantity,
+                    productCode: e.productCode,
+                    warehouseCode: e.warehouseCode,
+                    receivingCode: response.code,
+                    createdBy: userAuthContext.getEmail(event)
+                }
+            })
+        })
+    }
     return response.code
 })
