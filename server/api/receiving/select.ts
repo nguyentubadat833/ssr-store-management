@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
                     code: receivingCode
                 },
                 select: selectField
-            }).catch(error => {
+            }).catch((error: any) => {
                 return handlerError(error, event)
             })
         case "getStockData":

@@ -1,7 +1,6 @@
 import type {IApiCurd} from "~/types/client/IApiCurd";
 import type {
     IReceivingDeleteReq,
-    IReceivingDto,
     IReceivingParamsSelectReq,
     IReceivingUpdateReq
 } from "~/types/IReceiving";
@@ -60,17 +59,9 @@ export default function () {
             })
         }
 
-        async create(data: IReceivingDto) {
+        async save(req: IReceivingUpdateReq) {
             return await useAPI({
-                endpoint: '/api/receiving/create',
-                method: 'POST',
-                body: data
-            })
-        }
-
-        async update(req: IReceivingUpdateReq) {
-            await useAPI({
-                endpoint: '/api/receiving/update',
+                endpoint: '/api/receiving/save',
                 method: 'PUT',
                 params: req.params,
                 body: req.body

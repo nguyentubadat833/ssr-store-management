@@ -3,7 +3,7 @@ const {consoleRoutes} = useRouterConfig()
 const route = useRoute()
 
 const routeGroup = Object.values(useGroupBy(consoleRoutes, "group"))
-console.log(routeGroup)
+// console.log(routeGroup)
 
 </script>
 

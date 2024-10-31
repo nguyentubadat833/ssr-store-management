@@ -22,7 +22,6 @@ export default function (error: any, event: H3Event<EventHandlerRequest>) {
                     return errorObject
             }
         }
-        console.log(error)
         setResponseStatus(event, 400)
         errorObject.message = 'Lỗi thao tác'
         return errorObject

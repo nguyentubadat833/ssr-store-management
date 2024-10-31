@@ -30,7 +30,7 @@ interface IProductInfo {
 
 const toast = useToast()
 const notification = useNotification
-const {data: receivingFetchData, create, update, del, select, keyData, receivingStatus} = useReceiving()
+const {data: receivingFetchData, save, del, select, keyData, receivingStatus} = useReceiving()
 const {select: selectPo} = usePurchaseOrder()
 const {data: warehouseFetchData, keyData: warehouseKey} = useWarehouse()
 const {data: productFetchData, keyData: productKey, getProductName} = useProduct()
@@ -132,6 +132,7 @@ class ConsoleData extends IMainConsoleData {
   }
 
   mapState(object: any): void {
+    console.log(object)
     this.isOpenModal.value = true
     if (isObject(object)) {
       useAssign(receivingCurrent, object)
@@ -151,14 +152,15 @@ class ConsoleData extends IMainConsoleData {
 
   async saveData(): Promise<void> {
     if (receivingCurrent.poCode) {
-      if (receivingCurrent.code) {
-
-      } else {
-        const code = await create(receivingCurrent)
-        if (code) {
-          await receivingRefresh()
-          this.mapState(await this.selectByCode(code))
-        }
+      const code = await save({
+        params: {
+          updateType: 'save'
+        },
+        body: receivingCurrent
+      })
+      if (code) {
+        await receivingRefresh()
+        this.mapState(await this.selectByCode(code))
       }
     }
   }
@@ -167,7 +169,7 @@ class ConsoleData extends IMainConsoleData {
 const consoleData = new ConsoleData()
 
 function selectedPo(data: IPurchaseOrderDto[]) {
-
+  console.log(data)
   const dataSelected = data[0]
   receivingCurrent.poCode = dataSelected.code ?? ''
   receivingCurrent.stocks = (dataSelected.details as IPurchaseOrderDetailUseReceiving[]).map(e => {
@@ -191,7 +193,7 @@ function acceptWarehouseAll(warehouseCode: string) {
 async function changeStatus(input?: number) {
   switch (input) {
     case 0:
-      await update(<IReceivingUpdateReq>{
+      await save(<IReceivingUpdateReq>{
         params: {
           updateType: 'cancel',
           receivingCode: receivingCurrent.code
@@ -199,7 +201,7 @@ async function changeStatus(input?: number) {
       })
       break
     case 1:
-      await update(<IReceivingUpdateReq>{
+      await save(<IReceivingUpdateReq>{
         params: {
           updateType: 'progress',
           receivingCode: receivingCurrent.code
@@ -207,7 +209,7 @@ async function changeStatus(input?: number) {
       })
       break
     case 2:
-      await update(<IReceivingUpdateReq>{
+      await save(<IReceivingUpdateReq>{
         params: {
           updateType: 'imported',
           receivingCode: receivingCurrent.code
@@ -215,7 +217,7 @@ async function changeStatus(input?: number) {
       })
       break
   }
-  if (receivingCurrent.code){
+  if (receivingCurrent.code) {
     consoleData.mapState(await consoleData.selectByCode(receivingCurrent.code))
     await consoleData.refreshData()
   }
@@ -258,6 +260,12 @@ const timelineItems = computed<ITimelineElement[]>(() => {
   }) as ITimelineElement[]
 })
 
+const tableUIConfig = {
+  th: {
+    base: 'whitespace-nowrap'
+  }
+}
+
 </script>
 
 <template>
@@ -278,7 +286,7 @@ const timelineItems = computed<ITimelineElement[]>(() => {
       </UTable>
       <template #modalHeader>
         <div class="flex justify-center gap-2">
-          <Timeline v-if="receivingCurrent.code" :elements="timelineItems"
+          <Timeline :class="[{'pointer-events-none': !receivingCurrent.code}]" :elements="timelineItems"
                     v-model:active-index="receivingCurrent.status"/>
         </div>
       </template>
@@ -305,8 +313,8 @@ const timelineItems = computed<ITimelineElement[]>(() => {
                         day="numeric"/>
             </UFormGroup>
           </UForm>
-          <UTable :columns="inStockDetailColumns" :rows="receivingCurrent.stocks" class="max-h-96"
-                  :class="[{'pointer-events-none': receivingCurrent.status === 2 || !receivingCurrent.code}]"
+          <UTable :ui="tableUIConfig" :columns="inStockDetailColumns" :rows="receivingCurrent.stocks" class="max-h-96"
+                  :class="[{'pointer-events-none': receivingCurrent.status === 2}]"
           >
             <template #productName-data="{row}">
               {{ getProductName(productData, row?.productCode) }}

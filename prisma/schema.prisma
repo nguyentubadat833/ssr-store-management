@@ -61,6 +61,8 @@ model Category {
   lastUpdatedBy String?
 
   product Product[]
+
+  parentCode String?
 }
 
 model Product {
@@ -88,7 +90,7 @@ model Product {
 
 model Stock {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  inQuantity    Int
+  inQuantity    Int?
   outQuantity   Int?
   status        Int       @default(0) // 0. NoAvailable, 1.Available
   createdBy     String

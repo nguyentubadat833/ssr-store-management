@@ -47,8 +47,8 @@ export default async function ({
     const requestOptions = (): IRequestOptions => {
         return {
             method,
-            ...(isObject(params) && { params }),
-            ...(isObject(body) && { body }),
+            ...(isObject(params) && {params}),
+            ...(isObject(body) && {body}),
         }
     }
 
@@ -58,6 +58,7 @@ export default async function ({
             if (isFunction(requestOptionsCustom)) {
                 requestOptionsCustom(options)
             }
+            options.timeout = 4000
         },
         onResponse({response, request}) {
             // console.log(response)
@@ -74,7 +75,6 @@ export default async function ({
                         })
                         if (isObject(toastSuccessObjectCustom)) {
                             toastObject = mapCustomToastObject(toastObject, toastSuccessObjectCustom)
-                            console.log(toastObject)
                         }
                         toast.add(toastObject)
                     }
@@ -98,8 +98,15 @@ export default async function ({
                     customProcessOnResponse(response)
                 }
             }
-        }
+        },
     })
+        // .catch(e => {
+        //     console.log(e.statusCode)
+        //     return createError({
+        //         statusCode: 500,
+        //         statusMessage: 'Disconnect Database'
+        //     })
+        // })
     return result ? result : null
 
 }
