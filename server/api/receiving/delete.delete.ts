@@ -1,6 +1,7 @@
 import {IReceivingDeleteReq} from "~/types/IReceiving";
 import purchaseOrderError from "~/server/utils/error/purchaseOrderError";
 import receivingError from "~/server/utils/error/receivingError";
+import {getResponseMessageKey, responseMessage} from "~/types/IResponse";
 
 export default defineEventHandler(async (event) => {
     const params: IReceivingDeleteReq = getQuery(event)
@@ -18,15 +19,12 @@ export default defineEventHandler(async (event) => {
         .catch((error) => {
             return handlerError(error, event)
         })
-
     if (status === 2) {
-        return receivingError.imported(event)
-    } else {
-        await prismaClient.stock.deleteMany({
-            where: {
-                receivingCode: params.receivingCode
-            }
+        throw createError({
+            statusCode: 400,
+            statusText: getResponseMessageKey(responseMessage.receivingComplete)
         })
+    } else {
         await prismaClient.receiving.delete({
             where: {
                 code: params.receivingCode

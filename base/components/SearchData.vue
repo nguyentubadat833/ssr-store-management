@@ -1,18 +1,31 @@
-<script setup>
+<script setup lang="ts">
 const {
+  title,
+  data,
+  keyData,
+  selectMulti,
   icon,
   isNonIcon,
   btnLabel,
   btnColor,
-  title,
-  data,
-  selectMulti
-} = defineProps(['icon', 'isNonIcon', 'btnColor', 'btnLabel', 'title', 'columns', 'data', 'selectMulti'])
+}
+= defineProps<{
+  title?: string,
+  data: any[],
+  columns?: any[]
+  keyData: string,
+  selectMulti?: boolean,
+  icon?: string,
+  isNonIcon?: boolean,
+  btnLabel?: string,
+  btnColor?: string
+}>()
+// = defineProps(['icon', 'isNonIcon', 'btnColor', 'btnLabel', 'title', 'columns', 'data', 'keyData', 'selectMulti'])
 const emit = defineEmits(['selected'])
 
 const isOpen = ref(false)
 const result = ref()
-const singleResult = ref([])
+const singleResult = ref<any[]>([])
 const q = ref('')
 const btnIcon = computed(() => {
   if (!isNonIcon) {
@@ -22,11 +35,11 @@ const btnIcon = computed(() => {
   }
 })
 
-if (selectMulti === true) {
+if (selectMulti) {
   result.value = []
 }
 
-function removeAccents(str) {
+function removeAccents(str: any) {
   return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
@@ -46,9 +59,9 @@ const filteredRows = computed(() => {
   }
 })
 
-function select(row) {
-  if (selectMulti === true) {
-    const index = result.value.findIndex((item) => item.id === row.id)
+function select(row: any) {
+  if (selectMulti) {
+    const index = result.value.findIndex((item: { [x: string]: any; }) => item?.[`${keyData}`] === row?.[`${keyData}`])
     if (index === -1) {
       result.value.push(row)
     } else {
@@ -58,7 +71,6 @@ function select(row) {
     singleResult.value.length = 0
     singleResult.value.push(row)
   }
-
 }
 
 function selected() {
@@ -73,7 +85,7 @@ function selected() {
 }
 
 function clearSelect() {
-  if (selectMulti === true) {
+  if (selectMulti) {
     result.value = []
   } else {
     singleResult.value = []

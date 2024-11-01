@@ -9,8 +9,9 @@ export interface IReceivingDto {
 }
 
 export interface IReceivingParamsUpdateReq {
-    updateType: 'cancel' | 'progress' | 'imported' | 'save',
+    updateType: 'cancel' | 'progress' | 'imported' | 'deleteStock' | 'save',
     receivingCode?: string
+    stockId?: string
 }
 
 export interface IReceivingUpdateReq {

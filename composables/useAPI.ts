@@ -1,4 +1,6 @@
 import type {Notification} from "#ui/types/notification";
+import {getResponseMessageValue} from "~/types/IResponse";
+import {de} from "cronstrue/dist/i18n/locales/de";
 
 interface IUseAPIObject {
     endpoint: string,
@@ -61,7 +63,6 @@ export default async function ({
             options.timeout = 4000
         },
         onResponse({response, request}) {
-            // console.log(response)
             if (isUseDefaultProcessOnResponse) {
                 if (response.ok) {
                     result = response._data
@@ -69,9 +70,14 @@ export default async function ({
                         callbackMethodOnSuccess()
                     }
                     if (isShowSuccessMessage) {
+                        let description: string = ''
+                        if (response.statusText in responseMessage) {
+                            console.log(response.statusText)
+                            description = getResponseMessageValue(response.statusText as keyof typeof responseMessage, 'vi')
+                        }
                         let toastObject: Partial<Notification> = getToastObject({
                             type: 'success',
-                            description: response?.statusText
+                            description: description
                         })
                         if (isObject(toastSuccessObjectCustom)) {
                             toastObject = mapCustomToastObject(toastObject, toastSuccessObjectCustom)
@@ -82,16 +88,16 @@ export default async function ({
                     if (isFunction(callbackMethodOnError)) {
                         callbackMethodOnError()
                     }
-                    if (isShowErrorMessage && response?._data?.isError) {
-                        let toastObject = getToastObject({
-                            type: 'error',
-                            description: response?._data?.message
-                        })
-                        if (isObject(toastErrorObjectCustom)) {
-                            toastObject = mapCustomToastObject(toastObject, toastErrorObjectCustom)
-                        }
-                        toast.add(toastObject)
-                    }
+                    // if (isShowErrorMessage && response?._data?.isError) {
+                    //     let toastObject = getToastObject({
+                    //         type: 'error',
+                    //         description: response?._data?.message
+                    //     })
+                    //     if (isObject(toastErrorObjectCustom)) {
+                    //         toastObject = mapCustomToastObject(toastObject, toastErrorObjectCustom)
+                    //     }
+                    //     toast.add(toastObject)
+                    // }
                 }
             } else {
                 if (isFunction(customProcessOnResponse)) {
@@ -100,13 +106,22 @@ export default async function ({
             }
         },
     })
-        // .catch(e => {
-        //     console.log(e.statusCode)
-        //     return createError({
-        //         statusCode: 500,
-        //         statusMessage: 'Disconnect Database'
-        //     })
-        // })
+        .catch(e => {
+            let description: string = ''
+            if (e.statusText in responseMessage) {
+                description = getResponseMessageValue(e.statusText as keyof typeof responseMessage, 'vi')
+            }
+            if (isShowErrorMessage) {
+                let toastObject = getToastObject({
+                    type: 'error',
+                    description: description
+                })
+                if (isObject(toastErrorObjectCustom)) {
+                    toastObject = mapCustomToastObject(toastObject, toastErrorObjectCustom)
+                }
+                toast.add(toastObject)
+            }
+        })
     return result ? result : null
 
 }

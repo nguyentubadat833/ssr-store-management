@@ -6,20 +6,17 @@ const {consoleData} = defineProps<{
 }>()
 
 async function deleteAction() {
-  consoleData.isLoading.value = true
-  try {
-    await consoleData.deleteData()
-    await consoleData.refreshData()
-    consoleData.clearState()
-    consoleData.isOpenModal.value = false
-  } finally {
-    consoleData.isLoading.value = false
-  }
+  await consoleData.deleteData()
 }
 
 function createAction() {
   consoleData.clearState()
   consoleData.isOpenModal.value = true
+}
+
+function closeModal() {
+  consoleData.clearState()
+  consoleData.isOpenModal.value = false
 }
 
 </script>
@@ -39,7 +36,7 @@ function createAction() {
     </div>
     <slot/>
     <ClientOnly>
-      <UModal v-model="consoleData.isOpenModal.value" :ui="{width: 'md:max-w-screen-md'}">
+      <UModal v-model="consoleData.isOpenModal.value" :ui="{width: 'md:max-w-screen-md'}" prevent-close>
         <div @keyup.enter="consoleData.saveData()">
           <div class="p-4 space-y-6 ">
             <slot name="modalHeader"/>
@@ -49,7 +46,7 @@ function createAction() {
             <div class="flex justify-between items-center gap-4">
               <div class="flex justify-start ">
                 <UIcon name="ic:sharp-close" size="20" class="cursor-pointer hover:bg-gray-500"
-                       @click="consoleData.isOpenModal.value = false"/>
+                       @click="closeModal"/>
               </div>
               <div class="flex justify-end gap-4">
                 <UTooltip text="Clear">

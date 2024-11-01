@@ -81,9 +81,9 @@ model Product {
   lastUpdatedAt DateTime?
   lastUpdatedBy String?
 
-  stock               Stock[]
-  orderDetail         OrderDetail[]
-  purchaseOrderDetail PurchaseOrderDetail[]
+  stock Stock[]
+  // orderDetail OrderDetail[]
+  // purchaseOrderDetail PurchaseOrderDetail[]
 
   category Category? @relation(fields: [categoryCode], references: [code])
 }
@@ -104,7 +104,7 @@ model Stock {
 
   product   Product   @relation(fields: [productCode], references: [code])
   warehouse Warehouse @relation(fields: [warehouseCode], references: [code])
-  receiving Receiving @relation(fields: [receivingCode], references: [code])
+  receiving Receiving @relation(fields: [receivingCode], references: [code], onDelete: Cascade)
 }
 
 model Warehouse {
@@ -146,21 +146,21 @@ model Order {
   lastUpdatedAt DateTime?
   lastUpdatedBy String?
 
-  details OrderDetail[]
+  // details OrderDetail[]
 
   customer Customer @relation(fields: [customerCode], references: [code])
 }
 
-model OrderDetail {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  orderId     String @db.ObjectId
-  productCode String
-  quantity    Int
-  unitPrice   Float
-
-  order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productCode], references: [code])
-}
+// model OrderDetail {
+//   id          String @id @default(auto()) @map("_id") @db.ObjectId
+//   orderId     String @db.ObjectId
+//   productCode String
+//   quantity    Int
+//   unitPrice   Float
+//
+//   order   Order   @relation(fields: [orderId], references: [id])
+//   product Product @relation(fields: [productCode], references: [code])
+// }
 
 model PurchaseOrder {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
@@ -175,24 +175,24 @@ model PurchaseOrder {
   lastUpdatedAt DateTime?
   lastUpdatedBy String?
 
+  details   Json?
   receiving Receiving[]
 
-  supplier Supplier              @relation(fields: [supplierCode], references: [code])
-  details  PurchaseOrderDetail[]
+  supplier Supplier @relation(fields: [supplierCode], references: [code])
 }
 
-model PurchaseOrderDetail {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  poCode      String
-  productCode String
-  quantity    Int
-  unitPrice   Float?
-  totalAmount Float
-  status      Int    @default(1) // 0.NoUse
-
-  po      PurchaseOrder @relation(fields: [poCode], references: [code])
-  product Product       @relation(fields: [productCode], references: [code])
-}
+// model PurchaseOrderDetail {
+//   id          String @id @default(auto()) @map("_id") @db.ObjectId
+//   poCode      String
+//   productCode String
+//   quantity    Int
+//   unitPrice   Float?
+//   totalAmount Float
+//   status      Int    @default(1) // 0.NoUse
+//
+//   po      PurchaseOrder @relation(fields: [poCode], references: [code])
+//   product Product       @relation(fields: [productCode], references: [code])
+// }
 
 model Receiving {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId

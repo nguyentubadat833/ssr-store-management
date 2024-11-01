@@ -1,5 +1,4 @@
 import {
-    IPurchaseOrderDetailUseReceiving,
     IPurchaseOrderDto,
     IPurchaseOrderParamsSelectReq
 } from "~/types/IPurchaseOrder";
@@ -46,15 +45,15 @@ export default defineEventHandler(async (event) => {
                             info: true
                         }
                     },
-                    details: {
-                        include: {
-                            product: {
-                                select: {
-                                    name: true
-                                }
-                            }
-                        }
-                    }
+                    // details: {
+                    //     include: {
+                    //         product: {
+                    //             select: {
+                    //                 name: true
+                    //             }
+                    //         }
+                    //     }
+                    // }
                 }
             }).then((response) => {
                 return response.map(e => {
@@ -63,13 +62,13 @@ export default defineEventHandler(async (event) => {
                         supplierCode: e.supplierCode,
                         description: e.description,
                         status: e.status,
-                        details: e.details.map(e => {
-                            return {
-                                productCode: e.productCode,
-                                productName: e.product.name,
-                                quantity: e.quantity,
-                            } as IPurchaseOrderDetailUseReceiving
-                        }),
+                        // details: e.details.map(e => {
+                        //     return {
+                        //         productCode: e.productCode,
+                        //         productName: e.product.name,
+                        //         quantity: e.quantity,
+                        //     } as IPurchaseOrderDetailUseReceiving
+                        // }),
                         orderDate: e.orderDate,
                         dateOfReceipt: e.dateOfReceipt,
                         supplierName: (e.supplier.info as ISupplierInfo | null)?.name

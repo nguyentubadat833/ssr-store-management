@@ -1,31 +1,39 @@
 import {IPurchaseOrderParamsSelectReq} from "~/types/IPurchaseOrder";
 import purchaseOrderError from "~/server/utils/error/purchaseOrderError";
+import {getResponseMessageKey, responseMessage} from "~/types/IResponse";
 
 export default defineEventHandler(async (event) => {
     const params: IPurchaseOrderParamsSelectReq = getQuery(event)
-    try {
-        const data = await prismaClient.purchaseOrder.findUniqueOrThrow({
-            where: {
-                code: params.poCode
-            }
-        })
-        const status = data.status
-        if (status === 0) {
-            await prismaClient.purchaseOrderDetail.deleteMany({
-                where: {
-                    poCode: params.poCode
-                }
-            })
-            await prismaClient.purchaseOrder.delete({
+    const status = await prismaClient.purchaseOrder.findUniqueOrThrow({
+        where: {
+            code: params.poCode
+        }
+    }).then(data => {
+        return data.status
+    }).catch(e => {
+        handlerError(e, event)
+    })
+    switch (status) {
+        case 0:
+            return prismaClient.purchaseOrder.delete({
                 where: {
                     code: params.poCode
                 },
+                select: {
+                    code: true
+                }
+            }).then(data => {
+                return data.code
             })
-            setResponseStatus(event, 204)
-        } else {
-            return purchaseOrderError.ordered(event)
-        }
-    } catch (error) {
-        return handlerError(error, event)
+        case 1:
+            throw createError({
+                statusCode: 400,
+                statusText: getResponseMessageKey(responseMessage.purchaseOrderOrdered)
+            })
+        case 2:
+            throw createError({
+                statusCode: 400,
+                statusText: getResponseMessageKey(responseMessage.purchaseOrderOrderedAndStockEntered)
+            })
     }
 })

@@ -1,9 +1,7 @@
 import type {IApiCurd} from "~/types/client/IApiCurd";
 import type {
     IPurchaseOrderDeleteReq,
-    IPurchaseOrderDto,
-    IPurchaseOrderParamsSelectReq,
-    IPurchaseOrderUpdateReq
+    IPurchaseOrderParamsSelectReq, IPurchaseOrderSaveReq,
 } from "~/types/IPurchaseOrder";
 
 export default function () {
@@ -60,17 +58,9 @@ export default function () {
             })
         }
 
-        async create(data: IPurchaseOrderDto): Promise<string> {
+        async save(data: IPurchaseOrderSaveReq) {
             return await useAPI({
-                endpoint: '/api/purchaseOrder/create',
-                method: 'POST',
-                body: data
-            })
-        }
-
-        async update(data: IPurchaseOrderUpdateReq) {
-            return await useAPI({
-                endpoint: '/api/purchaseOrder/update',
+                endpoint: '/api/purchaseOrder/save',
                 method: 'PUT',
                 params: data.params,
                 body: data?.data
@@ -78,7 +68,7 @@ export default function () {
         }
 
         async del(params: IPurchaseOrderDeleteReq) {
-            await useAPI({
+            return await useAPI({
                 endpoint: '/api/purchaseOrder/delete',
                 method: 'DELETE',
                 params: params

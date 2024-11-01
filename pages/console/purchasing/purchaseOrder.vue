@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type {IPurchaseOrderDetail, IPurchaseOrderDetailUpdate, IPurchaseOrderDto} from "~/types/IPurchaseOrder";
+import type {IPurchaseOrderDetail, IPurchaseOrderRes} from "~/types/IPurchaseOrder";
 import {IMainConsoleData} from "~/types/client/IMainConsoleData";
 import type {ISupplierDto} from "~/types/ISupplier";
 import type {IProductDto} from "~/types/IProduct";
@@ -16,7 +16,7 @@ definePageMeta({
 })
 
 const {data: supplierFetch, keyData: supplierKey, getSupplierName} = useSupplier()
-const {data, create, update, select, del, keyData: poKey, purchaseOrderStatus} = usePurchaseOrder()
+const {data, save, select, del, keyData: poKey, purchaseOrderStatus} = usePurchaseOrder()
 const {data: productFetch, keyData: productKey, getProductName} = useProduct()
 const {data: productData} = useLazyAsyncData(productKey.productKeyData, () => productFetch(), {
   transform: (value: IProductDto[]) => {
@@ -44,7 +44,7 @@ const {data: supplierData} = await useAsyncData(supplierKey.supplierKeyData, () 
 })
 const {data: poData, refresh: refreshPoData} = await useAsyncData(poKey.poKeyData, () => data())
 
-const initialState: IPurchaseOrderDto = {
+const initialState: IPurchaseOrderRes = {
   code: '',
   supplierCode: '',
   description: '',
@@ -54,8 +54,7 @@ const initialState: IPurchaseOrderDto = {
   dateOfReceipt: undefined,
 };
 
-const poCurrent = reactive<IPurchaseOrderDto>({...initialState})
-const poDetailToDelete = ref<string[]>([])
+const poCurrent = reactive<IPurchaseOrderRes>({...initialState})
 const isPoPending = computed(() => poCurrent.status === 0)
 
 const columns = [{
@@ -112,18 +111,24 @@ async function selectByCode(code?: string) {
 class ConsoleData extends IMainConsoleData {
   clearState(): void {
     useAssign(poCurrent, initialState)
+    poCurrent.details = []
   }
 
   async deleteData(): Promise<void> {
     if (poCurrent.code) {
-      await del({
+      const code = await del({
         poCode: poCurrent.code
       })
+      if (code){
+        this.isOpenModal.value = false
+        await this.refreshData()
+      }
     }
   }
 
   mapState(object: any): void {
     this.isOpenModal.value = true
+    console.log(object)
     if (isObject(object)) {
       useAssign(poCurrent, object)
     }
@@ -134,32 +139,21 @@ class ConsoleData extends IMainConsoleData {
   }
 
   async saveData(): Promise<void> {
-    if (!poCurrent.code) {
-      const poCode = await create(poCurrent)
-      if (poCode) {
-        await refreshPoData()
-        this.mapState(await selectByCode(poCode))
+    const response = await save({
+      params: {
+        type: "save",
+        poCode: poCurrent.code
+      },
+      data: {
+        supplierCode: poCurrent.supplierCode,
+        description: poCurrent.description,
+        details: poCurrent.details?.filter(e => {
+          return !('status' in e) || e.status === 1;
+        })
       }
-    } else {
-      await update({
-        params: {
-          updateType: 'update',
-          poCode: poCurrent.code
-        },
-        data: {
-          code: poCurrent.code,
-          supplierCode: poCurrent.supplierCode,
-          description: poCurrent.description,
-          details: {
-            toDelete: poDetailToDelete.value,
-            toCreate: (poCurrent.details as IPurchaseOrderDetail[]).filter(e => !e.id),
-            toUpdate: (poCurrent.details as IPurchaseOrderDetail[]).filter(e => e.id),
-          } as IPurchaseOrderDetailUpdate
-        } as IPurchaseOrderDto
-      })
-      await refreshPoData()
-      this.mapState(await selectByCode())
-    }
+    })
+    this.mapState(response)
+    await this.refreshData()
   }
 }
 
@@ -172,39 +166,34 @@ function selectedSupplier(data: any) {
 function selectedProduct(data: any) {
   const addProducts: { code: string, name: string }[] = data
   addProducts.forEach(e => {
-    (poCurrent.details as IPurchaseOrderDetail[]).push({
-      poCode: poCurrent.code,
-      productCode: e.code,
-      quantity: 0,
-      unitPrice: 0,
-      totalAmount: 0
-    } as IPurchaseOrderDetail)
+    const isElExist = poCurrent.details?.some(el => el.productCode === e.code)
+    if (!isElExist) {
+      (poCurrent.details as IPurchaseOrderDetail[]).push({
+        poCode: poCurrent.code,
+        productCode: e.code,
+        quantity: 0,
+        unitPrice: 0,
+        totalAmount: 0
+      } as IPurchaseOrderDetail)
+    }
   })
-  console.log(data)
-}
-
-function addDetailToDelete(index: number, row: IPurchaseOrderDetail) {
-  if (isString(row.id) && isArray(poCurrent.details)) {
-    poDetailToDelete.value.push(row.id)
-    poCurrent.details?.splice(index, 1)
-  }
 }
 
 async function changeStatus(input?: number) {
   if (poCurrent.code) {
     switch (input) {
       case 0:
-        await update({
+        await save({
           params: {
-            updateType: 'cancel',
+            type: 'cancel',
             poCode: poCurrent.code
           }
         })
         break
       case 1:
-        await update({
+        await save({
           params: {
-            updateType: 'confirm',
+            type: 'confirm',
             poCode: poCurrent.code
           }
         })
@@ -212,6 +201,18 @@ async function changeStatus(input?: number) {
     }
     await refreshPoData()
     consoleData.mapState(await selectByCode())
+  }
+}
+
+function noUseDetail(index: number) {
+  if (isArray(poCurrent.details)) {
+    poCurrent.details[index].status = 0
+  }
+}
+
+function useDetail(index: number) {
+  if (isArray(poCurrent.details)) {
+    poCurrent.details[index].status = 1
   }
 }
 
@@ -234,7 +235,9 @@ const timelineItems: ITimelineElement[] = purchaseOrderStatus().data.map(e => {
           {{ `${row.supplierCode} | ${getSupplierName(supplierData, row.supplierCode)}` }}
         </template>
         <template #status-data="{row}">
-          <span :class="[{'bg-green-300': row.status === 1}, {'bg-blue-300': row.status === 2}]">{{ purchaseOrderStatus().map(row.status) }}</span>
+          <span :class="[{'bg-green-300': row.status === 1}, {'bg-blue-300': row.status === 2}]">{{
+              purchaseOrderStatus().map(row.status)
+            }}</span>
         </template>
         <template #orderDate-data="{row}">
           <NuxtTime v-if="row.orderDate" :datetime="row.orderDate" year="numeric" month="numeric" day="numeric"/>
@@ -258,21 +261,21 @@ const timelineItems: ITimelineElement[] = purchaseOrderStatus().data.map(e => {
             <div class="flex justify-between gap-2">
               <UInput disabled v-model="poCurrent.supplierCode" class="w-full"/>
               <UInput disabled :model-value="getSupplierName(supplierData, poCurrent.supplierCode)" class="w-full"/>
-              <SearchData title="Select Supplier" :data="supplierData"
+              <SearchData title="Select Supplier" :data="supplierData" key-data="code"
                           :columns="[{key: 'info.name', label: 'Name'}, {key: 'code', label: 'Code'}]"
                           @selected="selectedSupplier"/>
             </div>
           </UFormGroup>
-          <UFormGroup label="Status" name="status">
-            <USelect disabled v-model="poCurrent.status" :options="purchaseOrderStatus().data" option-attribute="name"
-                     value-attribute="status"/>
-          </UFormGroup>
-          <UFormGroup label="Order Date" name="orderDate">
-            <NuxtTime v-if="poCurrent.orderDate" :datetime="poCurrent.orderDate" year="numeric" month="numeric"
+          <!--          <UFormGroup label="Status" name="status">-->
+          <!--            <USelect disabled v-model="poCurrent.status" :options="purchaseOrderStatus().data" option-attribute="name"-->
+          <!--                     value-attribute="status"/>-->
+          <!--          </UFormGroup>-->
+          <UFormGroup v-if="poCurrent.orderDate" label="Order Date" name="orderDate">
+            <NuxtTime :datetime="poCurrent.orderDate" year="numeric" month="numeric"
                       day="numeric"/>
           </UFormGroup>
-          <UFormGroup label="Date Of Receipt" name="dateOfReceipt">
-            <NuxtTime v-if="poCurrent.dateOfReceipt" :datetime="poCurrent.dateOfReceipt" year="numeric" month="numeric"
+          <UFormGroup v-if="poCurrent.dateOfReceipt" label="Date Of Receipt" name="dateOfReceipt">
+            <NuxtTime :datetime="poCurrent.dateOfReceipt" year="numeric" month="numeric"
                       day="numeric"/>
           </UFormGroup>
           <UFormGroup label="Description" name="description">
@@ -284,27 +287,35 @@ const timelineItems: ITimelineElement[] = purchaseOrderStatus().data.map(e => {
           <UTable :columns="poDetailColumns" :rows="poCurrent.details || []"
                   class="max-h-80">
             <template #quantity-data="{row}">
-              <UInput v-model="row.quantity" type="number"/>
+              <UFormGroup :error="!row.quantity && 'You must enter quantity'">
+                <UInput v-model="row.quantity" type="number"/>
+              </UFormGroup>
             </template>
             <template #unitPrice-data="{row}">
               <UInput v-model="row.unitPrice" type="number"/>
             </template>
             <template #totalAmount-data="{row}">
-              <UInput v-model="row.totalAmount" type="number"/>
+              <UFormGroup :error="(row.quantity > 0 && !row.totalAmount) && 'You must enter totalAmount'">
+                <UInput v-model="row.totalAmount" type="number"/>
+              </UFormGroup>
             </template>
             <template #productCode-data="{row, index}">
-              <span>{{ getProductName(productData, row?.productCode) }}</span>
+              <span :class="[{'line-through': Number.isFinite(row.status) && row.status === 0}]">{{
+                  getProductName(productData, row?.productCode)
+                }}</span>
             </template>
             <template #actions-data="{index, row}">
               <div class="space-x-2">
-                <Icon name="ic:outline-clear" size="20" class="cursor-pointer"
-                      @click="addDetailToDelete(index, row)"/>
+                <Icon v-if="!('status' in row) || row.status === 1" name="ic:outline-clear" size="20"
+                      class="cursor-pointer" @click="noUseDetail(index)"/>
+                <Icon v-else name="ic:baseline-undo" size="20" class="cursor-pointer" @click="useDetail(index)"/>
               </div>
             </template>
           </UTable>
           <div class="flex justify-end">
             <SearchData title="Select Product" btn-label="Add Product" :is-non-icon="true" btn-color="white"
                         :data="productData"
+                        key-data="code"
                         :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]" :select-multi="true"
                         @selected="selectedProduct" :class="[{'pointer-events-none': !isPoPending && poCurrent.code}]"/>
           </div>

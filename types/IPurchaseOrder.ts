@@ -1,33 +1,26 @@
 export interface IPurchaseOrderDetail {
-    id?: string
-    poCode: string
+    status?: number
     productCode: string
     quantity: number
     unitPrice?: number
     totalAmount: number
 }
 
-export interface IPurchaseOrderDetailUseReceiving {
-    productCode: string
-    productName: string,
-    quantity: number,
+export interface IPurchaseOrderReq {
+    supplierCode: string
+    description?: string
+    details?: IPurchaseOrderDetail[]
 }
 
-export interface IPurchaseOrderDetailUpdate {
-    toCreate?: IPurchaseOrderDetail[]
-    toUpdate?: IPurchaseOrderDetail[]
-    toDelete?: string[]
-}
-
-export interface IPurchaseOrderDto {
-    code?: string
+export interface IPurchaseOrderRes {
+    code: string
     supplierCode: string
     supplierName?: string
     description?: string
-    status?: number
+    status: number
     orderDate?: Date,
     dateOfReceipt?: Date,
-    details?: IPurchaseOrderDetail[] | IPurchaseOrderDetailUpdate | IPurchaseOrderDetailUseReceiving[]
+    details?: IPurchaseOrderDetail[]
 }
 
 export interface IPurchaseOrderParamsSelectReq {
@@ -39,12 +32,12 @@ export interface IPurchaseOrderDeleteReq {
     poCode: string
 }
 
-export interface IPurchaseOrderParamsUpdateReq {
-    updateType: 'confirm' | 'cancel' | 'update',
+export interface IPurchaseOrderParamsSaveReq {
+    type: 'confirm' | 'cancel' | 'save',
     poCode: string
 }
 
-export interface IPurchaseOrderUpdateReq {
-    params: IPurchaseOrderParamsUpdateReq
-    data?: IPurchaseOrderDto
+export interface IPurchaseOrderSaveReq {
+    params: IPurchaseOrderParamsSaveReq
+    data?: IPurchaseOrderReq
 }

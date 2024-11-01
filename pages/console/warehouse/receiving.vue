@@ -3,7 +3,6 @@
 import type {IReceivingDto, IReceivingUpdateReq} from "~/types/IReceiving";
 import type {IStockDto} from "~/types/IStock";
 import {IMainConsoleData} from "~/types/client/IMainConsoleData";
-import type {IPurchaseOrderDetailUseReceiving, IPurchaseOrderDto} from "~/types/IPurchaseOrder";
 import type {IWarehouseDto} from "~/types/IWarehouse";
 import type {IProductDto} from "~/types/IProduct";
 import type {ITimelineElement} from "~/types/client/ITimelineElement";
@@ -137,6 +136,8 @@ class ConsoleData extends IMainConsoleData {
     if (isObject(object)) {
       useAssign(receivingCurrent, object)
     }
+    console.log('current', receivingCurrent)
+    console.log('object', object)
   }
 
   async refreshData(): Promise<void> {
@@ -168,20 +169,27 @@ class ConsoleData extends IMainConsoleData {
 
 const consoleData = new ConsoleData()
 
-function selectedPo(data: IPurchaseOrderDto[]) {
+async function refreshState() {
+  if (receivingCurrent.code) {
+    consoleData.mapState(await consoleData.selectByCode(receivingCurrent.code))
+  }
+  await consoleData.refreshData()
+}
+
+function selectedPo(data: any) {
   console.log(data)
   const dataSelected = data[0]
   receivingCurrent.poCode = dataSelected.code ?? ''
-  receivingCurrent.stocks = (dataSelected.details as IPurchaseOrderDetailUseReceiving[]).map(e => {
-    return {
-      receivingCode: receivingCurrent.code,
-      productName: e.productName,
-      productCode: e.productCode,
-      orderQuantity: e.quantity,
-      inQuantity: 0,
-      warehouseCode: ''
-    } as IStockDto
-  })
+  // receivingCurrent.stocks = (dataSelected.details as IPurchaseOrderDetailUseReceiving[]).map(e => {
+  //   return {
+  //     receivingCode: receivingCurrent.code,
+  //     productName: e.productName,
+  //     productCode: e.productCode,
+  //     orderQuantity: e.quantity,
+  //     inQuantity: 0,
+  //     warehouseCode: ''
+  //   } as IStockDto
+  // })
 }
 
 function acceptWarehouseAll(warehouseCode: string) {
@@ -199,15 +207,16 @@ async function changeStatus(input?: number) {
           receivingCode: receivingCurrent.code
         }
       })
+      await refreshState()
       break
-    case 1:
-      await save(<IReceivingUpdateReq>{
-        params: {
-          updateType: 'progress',
-          receivingCode: receivingCurrent.code
-        }
-      })
-      break
+      // case 1:
+      //   await save(<IReceivingUpdateReq>{
+      //     params: {
+      //       updateType: 'progress',
+      //       receivingCode: receivingCurrent.code
+      //     }
+      //   })
+      //   break
     case 2:
       await save(<IReceivingUpdateReq>{
         params: {
@@ -215,11 +224,8 @@ async function changeStatus(input?: number) {
           receivingCode: receivingCurrent.code
         }
       })
+      await refreshState()
       break
-  }
-  if (receivingCurrent.code) {
-    consoleData.mapState(await consoleData.selectByCode(receivingCurrent.code))
-    await consoleData.refreshData()
   }
 }
 
@@ -303,10 +309,10 @@ const tableUIConfig = {
                             @selected="selectedPo"/>
               </div>
             </UFormGroup>
-            <UFormGroup label="Status" name="status">
-              <USelect disabled v-model="receivingCurrent.status" :options="receivingStatus().data"
-                       option-attribute="name" value-attribute="status"/>
-            </UFormGroup>
+<!--            <UFormGroup label="Status" name="status">-->
+<!--              <USelect disabled v-model="receivingCurrent.status" :options="receivingStatus().data"-->
+<!--                       option-attribute="name" value-attribute="status"/>-->
+<!--            </UFormGroup>-->
             <UFormGroup label="Received Date" name="receivedDate">
               <NuxtTime v-if="receivingCurrent.receivedDate" :datetime="receivingCurrent.receivedDate" year="numeric"
                         month="numeric"
@@ -324,7 +330,9 @@ const tableUIConfig = {
                        value-attribute="code" @change="selectedWarehouseRow"/>
             </template>
             <template #inQuantity-data="{row}">
-              <UInput v-model="row.inQuantity" type="number"/>
+              <UFormGroup :error="(!row.warehouseCode && row.inQuantity > 0) && 'You must select warehouse'">
+                <UInput v-model="row.inQuantity" type="number"/>
+              </UFormGroup>
             </template>
           </UTable>
           <div class="flex items-center justify-end">
