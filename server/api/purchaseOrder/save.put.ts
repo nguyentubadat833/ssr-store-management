@@ -129,7 +129,8 @@ export default defineEventHandler(async (event) => {
                                         code: poCode
                                     },
                                     data: {
-                                        status: 1
+                                        status: 1,
+                                        orderDate: new Date()
                                     }
                                 })
                                 break

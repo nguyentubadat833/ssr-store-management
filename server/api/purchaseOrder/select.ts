@@ -12,27 +12,21 @@ export default defineEventHandler(async (event) => {
         supplierCode: true,
         description: true,
         status: true,
-        // details: true,
+        details: true,
         orderDate: true,
         dateOfReceipt: true,
     }
     switch (selectType) {
         case "many":
             return prismaClient.purchaseOrder.findMany({
-                select: {
-                    ...selectField,
-                    details: true
-                },
+                select: selectField
             })
         case "byCode":
             return prismaClient.purchaseOrder.findUnique({
                 where: {
                     code: poCode
                 },
-                select: {
-                    ...selectField,
-                    details: true
-                },
+                select: selectField
             })
         case "manyOrdered":
             const response = await prismaClient.purchaseOrder.findMany({
