@@ -1,6 +1,6 @@
 import {
-    IPurchaseOrderDto,
-    IPurchaseOrderParamsSelectReq
+    type IPurchaseOrderDetail,
+    IPurchaseOrderParamsSelectReq, type IPurchaseOrderRes
 } from "~/types/IPurchaseOrder";
 import {ISupplierInfo} from "~/types/ISupplier";
 
@@ -35,45 +35,53 @@ export default defineEventHandler(async (event) => {
                 },
             })
         case "manyOrdered":
-            return prismaClient.purchaseOrder.findMany({
+            const response = await prismaClient.purchaseOrder.findMany({
                 where: {
                     status: 1
                 },
-                include: {
+                select: {
+                    code: true,
+                    description: true,
                     supplier: {
                         select: {
+                            code: true,
                             info: true
                         }
                     },
-                    // details: {
-                    //     include: {
-                    //         product: {
-                    //             select: {
-                    //                 name: true
-                    //             }
-                    //         }
-                    //     }
-                    // }
+                    details: true,
+                    orderDate: true
                 }
-            }).then((response) => {
-                return response.map(e => {
+            })
+            if (response) {
+                return await Promise.all(response.map(async e => {
+                    const products = await prismaClient.product.findMany({
+                        where: {
+                            code: {
+                                in: (e.details as unknown as IPurchaseOrderDetail[]).map(e => {
+                                    return e.productCode
+                                })
+                            }
+                        },
+                        select: {
+                            name: true,
+                            code: true
+                        }
+                    })
                     return {
                         code: e.code,
-                        supplierCode: e.supplierCode,
+                        supplierCode: e.supplier.code,
+                        supplierName: (e.supplier.info as ISupplierInfo | null)?.name,
                         description: e.description,
-                        status: e.status,
-                        // details: e.details.map(e => {
-                        //     return {
-                        //         productCode: e.productCode,
-                        //         productName: e.product.name,
-                        //         quantity: e.quantity,
-                        //     } as IPurchaseOrderDetailUseReceiving
-                        // }),
+                        details: (e.details as unknown as IPurchaseOrderDetail[]).map(e => {
+                            return {
+                                quantity: e.quantity,
+                                productCode: e.productCode,
+                                productName: products.find(p => p.code === e.productCode)?.name
+                            } as IPurchaseOrderDetail
+                        }),
                         orderDate: e.orderDate,
-                        dateOfReceipt: e.dateOfReceipt,
-                        supplierName: (e.supplier.info as ISupplierInfo | null)?.name
-                    } as IPurchaseOrderDto
-                })
-            })
+                    } as IPurchaseOrderRes
+                }))
+            }
     }
 })

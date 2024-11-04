@@ -19,6 +19,14 @@ function closeModal() {
   consoleData.isOpenModal.value = false
 }
 
+onMounted(() => {
+  // window.addEventListener('keydown', (event) => {
+  //   if (event.ctrlKey && event.key === "s") {
+  //     event.preventDefault()
+  //     consoleData.saveData()
+  //   }
+  // })
+})
 </script>
 
 <template>
@@ -36,17 +44,18 @@ function closeModal() {
     </div>
     <slot/>
     <ClientOnly>
-      <UModal v-model="consoleData.isOpenModal.value" :ui="{width: 'md:max-w-screen-md'}" prevent-close>
-        <div @keyup.enter="consoleData.saveData()">
+      <UModal id="console-modal" v-model="consoleData.isOpenModal.value" :ui="{width: 'md:max-w-screen-md'}" prevent-close>
+        <div>
           <div class="p-4 space-y-6 ">
             <slot name="modalHeader"/>
             <UDivider v-if="$slots.modalHeader"/>
             <slot name="modalBody"/>
             <UDivider/>
             <div class="flex justify-between items-center gap-4">
-              <div class="flex justify-start ">
+              <div class="flex items-center justify-start ">
                 <UIcon name="ic:sharp-close" size="20" class="cursor-pointer hover:bg-gray-500"
                        @click="closeModal"/>
+                <span class="text-sm text-gray-400">(Esc)</span>
               </div>
               <div class="flex justify-end gap-4">
                 <UTooltip text="Clear">
@@ -55,7 +64,7 @@ function closeModal() {
                 <UTooltip text="Delete">
                   <UButton icon="ic:outline-delete-outline" @click="deleteAction"/>
                 </UTooltip>
-                <UTooltip text="Save">
+                <UTooltip text="Save (Ctrl + S)">
                   <UButton icon="ic:outline-save" @click="consoleData.saveData()"/>
                 </UTooltip>
               </div>

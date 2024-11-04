@@ -1,11 +1,12 @@
 <script setup lang="ts">
 
-import type {IReceivingDto, IReceivingUpdateReq} from "~/types/IReceiving";
-import type {IStockDto} from "~/types/IStock";
 import {IMainConsoleData} from "~/types/client/IMainConsoleData";
 import type {IWarehouseDto} from "~/types/IWarehouse";
 import type {IProductDto} from "~/types/IProduct";
 import type {ITimelineElement} from "~/types/client/ITimelineElement";
+import type {IPurchaseOrderDetail} from "~/types/IPurchaseOrder";
+import type {IStockAddReceivingReq, IStockInfo} from "~/types/IStock";
+import type {IReceivingReq, IReceivingRes} from "~/types/IReceiving";
 
 definePageMeta({
   layout: 'console',
@@ -62,15 +63,17 @@ const {data: poDataOrdered} = useLazyAsyncData('po-many-ordered', () => selectPo
   selectType: "manyOrdered"
 }))
 
-const initialState: IReceivingDto = {
+console.log(poDataOrdered.value)
+
+const initialState: IReceivingRes = {
   code: '',
   poCode: '',
   status: NaN,
   receivedDate: undefined,
-  stocks: [] as IStockDto[]
+  stocks: [] as IStockInfo[]
 }
 
-const receivingCurrent = reactive<IReceivingDto>({...initialState})
+const receivingCurrent = reactive<IReceivingRes>({...initialState})
 
 const receivingColumns = [{
   key: 'code',
@@ -155,9 +158,21 @@ class ConsoleData extends IMainConsoleData {
     if (receivingCurrent.poCode) {
       const code = await save({
         params: {
-          updateType: 'save'
+          type: 'save'
         },
-        body: receivingCurrent
+        body: {
+          code: receivingCurrent.code,
+          poCode: receivingCurrent.poCode,
+          stocks: receivingCurrent.stocks?.map(e => {
+            return {
+              id: e.id,
+              inQuantity: e.inQuantity,
+              productCode: e.productCode,
+              warehouseCode: e.warehouseCode,
+              receivingCode: e.receivingCode
+            } as IStockAddReceivingReq
+          })
+        } as IReceivingReq
       })
       if (code) {
         await receivingRefresh()
@@ -177,37 +192,36 @@ async function refreshState() {
 }
 
 function selectedPo(data: any) {
-  console.log(data)
   const dataSelected = data[0]
   receivingCurrent.poCode = dataSelected.code ?? ''
-  // receivingCurrent.stocks = (dataSelected.details as IPurchaseOrderDetailUseReceiving[]).map(e => {
-  //   return {
-  //     receivingCode: receivingCurrent.code,
-  //     productName: e.productName,
-  //     productCode: e.productCode,
-  //     orderQuantity: e.quantity,
-  //     inQuantity: 0,
-  //     warehouseCode: ''
-  //   } as IStockDto
-  // })
+  receivingCurrent.stocks = (dataSelected.details as IPurchaseOrderDetail[]).map(e => {
+    return {
+      receivingCode: receivingCurrent.code,
+      productName: e.productName,
+      productCode: e.productCode,
+      orderQuantity: e.quantity,
+      inQuantity: 0,
+      warehouseCode: ''
+    } as IStockInfo
+  })
 }
 
 function acceptWarehouseAll(warehouseCode: string) {
-  receivingCurrent.stocks.forEach(e => {
-    e.warehouseCode = warehouseCode
-  })
+  // receivingCurrent.stocks.forEach(e => {
+  //   e.warehouseCode = warehouseCode
+  // })
 }
 
 async function changeStatus(input?: number) {
   switch (input) {
     case 0:
-      await save(<IReceivingUpdateReq>{
-        params: {
-          updateType: 'cancel',
-          receivingCode: receivingCurrent.code
-        }
-      })
-      await refreshState()
+      // await save(<IReceivingUpdateReq>{
+      //   params: {
+      //     updateType: 'cancel',
+      //     receivingCode: receivingCurrent.code
+      //   }
+      // })
+      // await refreshState()
       break
       // case 1:
       //   await save(<IReceivingUpdateReq>{
@@ -218,13 +232,13 @@ async function changeStatus(input?: number) {
       //   })
       //   break
     case 2:
-      await save(<IReceivingUpdateReq>{
-        params: {
-          updateType: 'imported',
-          receivingCode: receivingCurrent.code
-        }
-      })
-      await refreshState()
+      // await save(<IReceivingUpdateReq>{
+      //   params: {
+      //     updateType: 'imported',
+      //     receivingCode: receivingCurrent.code
+      //   }
+      // })
+      // await refreshState()
       break
   }
 }
@@ -232,14 +246,14 @@ async function changeStatus(input?: number) {
 function addProducts(data: IProductInfo[]) {
   const selected = data[0]
   if (selected) {
-    receivingCurrent.stocks.push({
+    receivingCurrent.stocks?.push({
       receivingCode: receivingCurrent.code,
       productName: selected.name,
       productCode: selected.code,
       orderQuantity: 0,
       inQuantity: 0,
       warehouseCode: ''
-    } as IStockDto)
+    } as IStockInfo)
   }
 }
 
@@ -306,13 +320,14 @@ const tableUIConfig = {
               <div class="flex justify-between gap-2">
                 <UInput disabled v-model="receivingCurrent.poCode" class="w-full"/>
                 <SearchData title="Select Purchase Order" :columns="searchPoColumns" :data="poDataOrdered"
+                            key-data="code"
                             @selected="selectedPo"/>
               </div>
             </UFormGroup>
-<!--            <UFormGroup label="Status" name="status">-->
-<!--              <USelect disabled v-model="receivingCurrent.status" :options="receivingStatus().data"-->
-<!--                       option-attribute="name" value-attribute="status"/>-->
-<!--            </UFormGroup>-->
+            <!--            <UFormGroup label="Status" name="status">-->
+            <!--              <USelect disabled v-model="receivingCurrent.status" :options="receivingStatus().data"-->
+            <!--                       option-attribute="name" value-attribute="status"/>-->
+            <!--            </UFormGroup>-->
             <UFormGroup label="Received Date" name="receivedDate">
               <NuxtTime v-if="receivingCurrent.receivedDate" :datetime="receivingCurrent.receivedDate" year="numeric"
                         month="numeric"
@@ -336,7 +351,8 @@ const tableUIConfig = {
             </template>
           </UTable>
           <div class="flex items-center justify-end">
-            <SearchData title="Select Product" btn-label="Add product" :data="productData" @selected="addProducts"
+            <SearchData title="Select Product" btn-label="Add product" :data="productData" key-data="code"
+                        @selected="addProducts"
                         :select-multi="true"/>
           </div>
         </div>

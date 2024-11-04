@@ -9,7 +9,7 @@ const {
   btnLabel,
   btnColor,
 }
-= defineProps<{
+    = defineProps<{
   title?: string,
   data: any[],
   columns?: any[]
@@ -20,10 +20,10 @@ const {
   btnLabel?: string,
   btnColor?: string
 }>()
-// = defineProps(['icon', 'isNonIcon', 'btnColor', 'btnLabel', 'title', 'columns', 'data', 'keyData', 'selectMulti'])
-const emit = defineEmits(['selected'])
 
+const emit = defineEmits(['selected'])
 const isOpen = ref(false)
+const isNonSelected = ref(false)
 const result = ref()
 const singleResult = ref<any[]>([])
 const q = ref('')
@@ -80,8 +80,13 @@ function selected() {
   } else {
     response = singleResult.value
   }
-  emit('selected', response)
-  isOpen.value = false
+  if (Array.isArray(response) && response.length > 0) {
+    emit('selected', response)
+    isOpen.value = false
+    isNonSelected.value = false
+  } else {
+    isNonSelected.value = true
+  }
 }
 
 function clearSelect() {
@@ -125,6 +130,7 @@ function clearSelect() {
 
         <template #footer>
           <div class="space-y-4">
+            <span class="text-sm text-red-500" v-if="isNonSelected">No records selected</span>
             <UButton label="Select" @click="selected" block/>
             <UButton color="white" label="Clear" @click="clearSelect" block/>
           </div>

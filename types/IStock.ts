@@ -1,12 +1,20 @@
-export interface IStockDto {
+export interface IStockAddReceivingReq {
     id?: string
-    orderQuantity?: number
-    inQuantity?: number
-    outQuantity?: number
-    status?: number
+    inQuantity: number
     productCode: string
-    productName?: string
     warehouseCode: string
     receivingCode: string
-    createdBy?: string
 }
+
+export interface IStockInfo {
+    id: string
+    orderQuantity: number
+    inQuantity: number
+    outQuantity?: number
+    productCode: string
+    productName: string
+    warehouseCode: string
+    warehouseName: string
+    receivingCode: string
+}
+

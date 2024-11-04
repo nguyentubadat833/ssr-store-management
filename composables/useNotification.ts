@@ -1,7 +1,7 @@
 import type {Notification} from "#ui/types/notification";
 
 export interface IToastOptions {
-    type: 'success' | 'info' | 'error'
+    type: 'success' | 'info' | 'error' | 'warn'
     title?: string
     icon?: string
     // successTitle?: string
@@ -43,6 +43,11 @@ function getToastObject({
             object.title = title || 'Information'
             object.icon = icon || 'ic:baseline-info'
             object.color = 'blue'
+            break
+        case "warn":
+            object.title = title || 'Warn'
+            object.icon = icon || 'ic:round-warning'
+            object.color = 'orange'
             break
         case 'error':
             // object.title = errorTitle

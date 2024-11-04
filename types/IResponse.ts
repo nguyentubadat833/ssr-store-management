@@ -34,6 +34,10 @@ export const responseMessage = {
         en: 'Order processed and stock entered',
         vi: 'Đơn hàng đã tiến hành & nhập hàng'
     },
+    purchaseOrderToLinkReceiving: {
+        en: 'Purchase order is already linked to a receipt',
+        vi: 'Đơn hàng mua đã có phiếu nhập liên kết'
+    },
     invalidQuantityAndTotalAmount: {
         en: 'Invalid quantity và total amount',
         vi: ' Vui lòng nhập số lượng & tổng tiền'

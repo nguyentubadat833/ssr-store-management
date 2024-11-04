@@ -1,25 +1,22 @@
-import {IReceivingDto, type IReceivingParamsUpdateReq} from "~/types/IReceiving";
-import receivingError from "~/server/utils/error/receivingError";
-import {IResponseErrorObject, getResponseMessageKey, responseMessage} from "~/types/IResponse";
+import {getResponseMessageKey, responseMessage} from "~/types/IResponse";
 import randomstring from "randomstring";
 import {EventHandlerRequest, H3Event} from "h3";
-import {IStockDto} from "~/types/IStock";
-import {da} from "cronstrue/dist/i18n/locales/da";
+import {IReceivingParamsSaveReq, IReceivingReq} from "~/types/IReceiving";
 
 export default defineEventHandler(async (event) => {
-    const params: IReceivingParamsUpdateReq = getQuery(event)
-    const {updateType, receivingCode, stockId} = params
-    const body: IReceivingDto = await readBody(event)
-    if (updateType === 'save') {
+    const params: IReceivingParamsSaveReq = getQuery(event)
+    const {type, receivingCode, stockId} = params
+    const body: IReceivingReq = await readBody(event)
+    if (type === 'save') {
         const {code, stocks: stocksReq} = body
-        const isNonSelectWarehouse = stocksReq.some(e => e.inQuantity && e.inQuantity > 0 && !e.warehouseCode)
+        const isNonSelectWarehouse = stocksReq?.some(e => e.inQuantity && e.inQuantity > 0 && !e.warehouseCode)
         if (isNonSelectWarehouse) {
             throw createError({
                 statusCode: 400,
                 statusText: getResponseMessageKey(responseMessage.invalidWarehouse)
             })
         }
-        const isProgress = stocksReq.some(e => {
+        const isProgress = stocksReq?.some(e => {
             return e.inQuantity && e.inQuantity > 0
         })
         if (code) {
@@ -30,46 +27,6 @@ export default defineEventHandler(async (event) => {
                     statusText: getResponseMessageKey(responseMessage.receivingComplete)
                 })
             } else {
-                let toCreate: {
-                    inQuantity: number;
-                    productCode: string;
-                    warehouseCode: string;
-                    createdBy: string;
-                }[] = []
-                let toUpdate: {
-                    where: {
-                        id: string;
-                    };
-                    data: {
-                        inQuantity: number; productCode: string; warehouseCode: string;
-                        lastUpdatedBy: string; lastUpdatedAt: Date;
-                    };
-                }[] = []
-                stocksReq.forEach(e => {
-                    if (e.id) {
-                        toUpdate.push({
-                            where: {
-                                id: e.id
-                            },
-                            data: {
-                                inQuantity: e.inQuantity || 0,
-                                productCode: e.productCode,
-                                warehouseCode: e.warehouseCode,
-                                // receivingCode: code,
-                                lastUpdatedBy: userAuthContext.getEmail(event),
-                                lastUpdatedAt: new Date()
-                            }
-                        })
-                    } else {
-                        toCreate.push({
-                            inQuantity: e.inQuantity || 0,
-                            productCode: e.productCode,
-                            warehouseCode: e.warehouseCode,
-                            // receivingCode: code,
-                            createdBy: userAuthContext.getEmail(event),
-                        })
-                    }
-                })
                 return prismaClient.receiving.update({
                     where: {
                         code: code
@@ -77,8 +34,30 @@ export default defineEventHandler(async (event) => {
                     data: {
                         status: isProgress ? 1 : 0,
                         stocks: {
-                            update: toUpdate,
-                            create: toCreate
+                            update: stocksReq?.filter(e => e.id)
+                                .map(e => {
+                                    return {
+                                        where: {
+                                            id: e.id
+                                        },
+                                        data: {
+                                            inQuantity: e.inQuantity,
+                                            productCode: e.productCode,
+                                            warehouseCode: e.warehouseCode,
+                                            lastUpdatedBy: userAuthContext.getEmail(event),
+                                            lastUpdatedAt: new Date()
+                                        }
+                                    }
+                                }) || [],
+                            create: stocksReq?.filter(e => !e.id)
+                                .map(e => {
+                                    return {
+                                        inQuantity: e.inQuantity,
+                                        productCode: e.productCode,
+                                        warehouseCode: e.warehouseCode,
+                                        createdBy: userAuthContext.getEmail(event)
+                                    }
+                                }) || []
                         }
                     }
                 }).then(response => {
@@ -86,7 +65,7 @@ export default defineEventHandler(async (event) => {
                 });
             }
         } else {
-            const dataCreate = await prismaClient.receiving.create({
+            return prismaClient.receiving.create({
                 data: {
                     code: 'RCV' + randomstring.generate({
                         length: 10,
@@ -95,48 +74,30 @@ export default defineEventHandler(async (event) => {
                     poCode: body.poCode,
                     status: isProgress ? 1 : 0,
                     createdBy: userAuthContext.getEmail(event),
-                },
-                select: {
-                    status: true,
-                    po: {
-                        select: {
-                            code: true,
-                            status: true
+                    stocks: {
+                        createMany: {
+                            data: stocksReq?.map(e => {
+                                return {
+                                    inQuantity: e.inQuantity,
+                                    productCode: e.productCode,
+                                    warehouseCode: e.warehouseCode,
+                                    createdBy: userAuthContext.getEmail(event)
+                                }
+                            }) || []
                         }
                     }
+                },
+                select: {
+                    code: true
                 }
-            })
-            if (isProgress && dataCreate.po.status !== 2) {
-                await prismaClient.purchaseOrder.update({
-                    where: {
-                        code: dataCreate.po.code
-                    },
-                    data: {
-                        status: 2
-                    }
-                })
-            }
-            const rcvCode = dataCreate.po.code
-            if (rcvCode) {
-                const stocksCreate = stocksReq.map(e => {
-                    return {
-                        inQuantity: e.inQuantity || 0,
-                        createdBy: userAuthContext.getEmail(event),
-                        productCode: e.productCode,
-                        warehouseCode: e.warehouseCode,
-                        receivingCode: rcvCode
-                    }
-                })
-                await prismaClient.stock.createMany({
-                    data: stocksCreate
-                })
-            }
-            return rcvCode
+            }).then(data => {
+                return data.code
+            });
         }
     } else {
         if (receivingCode) {
             const status = await getReceivingStatus(receivingCode, event)
-            switch (updateType) {
+            switch (type) {
                 case "cancel":
                     switch (status) {
                         case 1:

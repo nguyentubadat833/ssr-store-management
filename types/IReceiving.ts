@@ -1,26 +1,32 @@
-import type {IStockDto} from "~/types/IStock";
+import type {IStockAddReceivingReq, IStockInfo} from "~/types/IStock";
 
-export interface IReceivingDto {
+export interface IReceivingReq {
     code?: string
     poCode: string
-    status?: number
-    receivedDate?: Date
-    stocks: IStockDto[]
+    stocks?: IStockAddReceivingReq[]
 }
 
-export interface IReceivingParamsUpdateReq {
-    updateType: 'cancel' | 'progress' | 'imported' | 'deleteStock' | 'save',
+export interface IReceivingRes {
+    code: string,
+    poCode: string,
+    status: number,
+    receivedDate?: Date,
+    stocks?: IStockInfo[]
+}
+
+export interface IReceivingParamsSaveReq {
+    type: 'cancel' | 'progress' | 'imported' | 'deleteStock' | 'save',
     receivingCode?: string
     stockId?: string
 }
 
-export interface IReceivingUpdateReq {
-    params: IReceivingParamsUpdateReq,
-    body?: IReceivingDto
+export interface IReceivingSaveReq {
+    params: IReceivingParamsSaveReq,
+    body?: IReceivingReq
 }
 
 export interface IReceivingParamsSelectReq {
-    selectType: 'many' | 'byCode' | 'getStockData',
+    selectType: 'many' | 'byCode'
     receivingCode?: string
 }
 

@@ -1,6 +1,7 @@
 export interface IPurchaseOrderDetail {
     status?: number
     productCode: string
+    productName?: string
     quantity: number
     unitPrice?: number
     totalAmount: number

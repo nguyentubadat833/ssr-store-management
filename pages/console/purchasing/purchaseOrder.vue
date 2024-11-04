@@ -15,6 +15,8 @@ definePageMeta({
   }
 })
 
+const toast = useToast()
+const notification = useNotification
 const {data: supplierFetch, keyData: supplierKey, getSupplierName} = useSupplier()
 const {data, save, select, del, keyData: poKey, purchaseOrderStatus} = usePurchaseOrder()
 const {data: productFetch, keyData: productKey, getProductName} = useProduct()
@@ -119,7 +121,7 @@ class ConsoleData extends IMainConsoleData {
       const code = await del({
         poCode: poCurrent.code
       })
-      if (code){
+      if (code) {
         this.isOpenModal.value = false
         await this.refreshData()
       }
@@ -128,7 +130,6 @@ class ConsoleData extends IMainConsoleData {
 
   mapState(object: any): void {
     this.isOpenModal.value = true
-    console.log(object)
     if (isObject(object)) {
       useAssign(poCurrent, object)
     }
@@ -180,28 +181,31 @@ function selectedProduct(data: any) {
 }
 
 async function changeStatus(input?: number) {
-  if (poCurrent.code) {
-    switch (input) {
-      case 0:
+  switch (input) {
+    case 0:
+      if (poCurrent.code) {
         await save({
           params: {
             type: 'cancel',
             poCode: poCurrent.code
           }
         })
-        break
-      case 1:
-        await save({
-          params: {
-            type: 'confirm',
-            poCode: poCurrent.code
-          }
-        })
-        break
-    }
-    await refreshPoData()
-    consoleData.mapState(await selectByCode())
+      }
+      break
+    case 1:
+      if (!poCurrent.code) {
+        await consoleData.saveData()
+      }
+      await save({
+        params: {
+          type: 'confirm',
+          poCode: poCurrent.code
+        }
+      })
+      break
   }
+  await refreshPoData()
+  consoleData.mapState(await selectByCode())
 }
 
 function noUseDetail(index: number) {
@@ -223,6 +227,20 @@ const timelineItems: ITimelineElement[] = purchaseOrderStatus().data.map(e => {
     action: () => changeStatus(e.status)
   } as ITimelineElement
 })
+
+function handleChangeQuantityOrUnitPrice(event: any, poDetailRow: IPurchaseOrderDetail) {
+  if (poDetailRow.unitPrice && poDetailRow.quantity) {
+    poDetailRow.totalAmount = poDetailRow.unitPrice * poDetailRow.quantity
+  }
+}
+
+function handleChangTotalAmount(event: any, poDetailRow: IPurchaseOrderDetail) {
+  if (!poDetailRow.totalAmount) {
+    poDetailRow.unitPrice = 0
+  } else {
+    poDetailRow.unitPrice = poDetailRow.totalAmount / poDetailRow.quantity
+  }
+}
 
 </script>
 
@@ -288,15 +306,15 @@ const timelineItems: ITimelineElement[] = purchaseOrderStatus().data.map(e => {
                   class="max-h-80">
             <template #quantity-data="{row}">
               <UFormGroup :error="!row.quantity && 'You must enter quantity'">
-                <UInput v-model="row.quantity" type="number"/>
+                <UInput v-model="row.quantity" type="number" @change="handleChangeQuantityOrUnitPrice($event, row)"/>
               </UFormGroup>
             </template>
             <template #unitPrice-data="{row}">
-              <UInput v-model="row.unitPrice" type="number"/>
+              <UInput v-model="row.unitPrice" type="number" @change="handleChangeQuantityOrUnitPrice($event, row)"/>
             </template>
             <template #totalAmount-data="{row}">
               <UFormGroup :error="(row.quantity > 0 && !row.totalAmount) && 'You must enter totalAmount'">
-                <UInput v-model="row.totalAmount" type="number"/>
+                <UInput v-model="row.totalAmount" type="number" @change="handleChangTotalAmount($event, row)"/>
               </UFormGroup>
             </template>
             <template #productCode-data="{row, index}">
@@ -317,7 +335,8 @@ const timelineItems: ITimelineElement[] = purchaseOrderStatus().data.map(e => {
                         :data="productData"
                         key-data="code"
                         :columns="[{key: 'name', label: 'Name'}, {key: 'code', label: 'Code'}]" :select-multi="true"
-                        @selected="selectedProduct" :class="[{'pointer-events-none': !isPoPending && poCurrent.code}]"/>
+                        @selected="selectedProduct"
+                        :class="[{'pointer-events-none': (!isPoPending && poCurrent.code) || !poCurrent.supplierCode}]"/>
           </div>
         </UForm>
       </template>

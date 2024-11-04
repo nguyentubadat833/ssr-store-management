@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     if (type === 'save') {
         const details = body?.details?.filter(e => !('status' in e) || e.status === 1)
             .map(e => {
-                if (!e.quantity || (e.quantity > 0 && !e.totalAmount)){
+                if (!e.quantity || (e.quantity > 0 && !e.totalAmount)) {
                     throw createError({
                         statusCode: 400,
                         statusText: getResponseMessageKey(responseMessage.invalidQuantityAndTotalAmount)
@@ -75,15 +75,35 @@ export default defineEventHandler(async (event) => {
                         setResponseStatus(event, 204, getResponseMessageKey(responseMessage.purchaseOrderPending))
                         break
                     case 1:
-                        await prismaClient.purchaseOrder.update({
+                        const data = await prismaClient.purchaseOrder.findUniqueOrThrow({
                             where: {
                                 code: poCode
                             },
-                            data: {
-                                status: 0
+                            select: {
+                                receiving: true
                             }
+                        }).then(data => {
+                            return data.receiving
+                        }).catch(e => {
+                            handlerError(e, event)
                         })
-                        break
+
+                        if (Array.isArray(data) && data.length > 0) {
+                            throw createError({
+                                statusCode: 400,
+                                statusText: getResponseMessageKey(responseMessage.purchaseOrderToLinkReceiving)
+                            })
+                        } else {
+                            await prismaClient.purchaseOrder.update({
+                                where: {
+                                    code: poCode
+                                },
+                                data: {
+                                    status: 0
+                                }
+                            })
+                            break
+                        }
                     case 2:
                         throw createError({
                             statusCode: 400,

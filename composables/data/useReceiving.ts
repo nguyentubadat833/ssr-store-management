@@ -1,8 +1,7 @@
 import type {IApiCurd} from "~/types/client/IApiCurd";
 import type {
     IReceivingDeleteReq,
-    IReceivingParamsSelectReq,
-    IReceivingUpdateReq
+    IReceivingParamsSelectReq, IReceivingSaveReq,
 } from "~/types/IReceiving";
 
 export default function () {
@@ -59,7 +58,7 @@ export default function () {
             })
         }
 
-        async save(req: IReceivingUpdateReq) {
+        async save(req: IReceivingSaveReq) {
             return await useAPI({
                 endpoint: '/api/receiving/save',
                 method: 'PUT',
