@@ -68,7 +68,7 @@ export default function () {
         }
 
         async del(req: IReceivingDeleteReq) {
-            await useAPI({
+            return await useAPI({
                 endpoint: '/api/receiving/delete',
                 method: 'DELETE',
                 params: req

@@ -59,13 +59,16 @@ export default defineEventHandler(async (event) => {
                                     }
                                 }) || []
                         }
+                    },
+                    select: {
+                        code: true
                     }
-                }).then(response => {
-                    return response.code
-                });
+                }).then(data => {
+                    return data.code
+                })
             }
         } else {
-            return prismaClient.receiving.create({
+            const response = await prismaClient.receiving.create({
                 data: {
                     code: 'RCV' + randomstring.generate({
                         length: 10,
@@ -87,12 +90,25 @@ export default defineEventHandler(async (event) => {
                         }
                     }
                 },
-                select: {
-                    code: true
+                include: {
+                    po: {
+                        select: {
+                            status: true
+                        }
+                    }
                 }
-            }).then(data => {
-                return data.code
-            });
+            })
+            if (response.po.status === 1) {
+                await prismaClient.purchaseOrder.update({
+                    where: {
+                        code: body.poCode,
+                    },
+                    data: {
+                        status: 2
+                    }
+                })
+            }
+            return response.code
         }
     } else {
         if (receivingCode) {
@@ -157,45 +173,22 @@ export default defineEventHandler(async (event) => {
 })
 
 async function setCancel(receivingCode: string) {
-    const dataUpdate = await prismaClient.receiving.update({
-        where: {
-            code: receivingCode
-        },
-        data: {
-            status: 0,
-            receivedDate: null
-        },
-        select: {
-            po: {
-                select: {
-                    code: true,
-                    receiving: true
-                }
-            }
-        }
-    })
-    console.log('dataUpdate.po.receiving', dataUpdate.po.receiving)
-    // if (dataUpdate.po.receiving.length === 0) {
-    //     console.log('dataUpdate:Po:Rcv', dataUpdate.po.receiving)
-    //     await prismaClient.purchaseOrder.update({
-    //         where: {
-    //             code: dataUpdate.po.code
-    //         },
-    //         data: {
-    //             status: 1
-    //         }
-    //     })
-    // }
-}
-
-async function setProgress(receivingCode: string) {
     await prismaClient.receiving.update({
         where: {
             code: receivingCode
         },
         data: {
-            status: 1
-        }
+            status: 0,
+            receivedDate: null,
+            stocks: {
+                updateMany: {
+                    where: {},
+                    data: {
+                        inQuantity: 0
+                    }
+                }
+            }
+        },
     })
 }
 

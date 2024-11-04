@@ -1,6 +1,4 @@
 import {IReceivingDeleteReq} from "~/types/IReceiving";
-import purchaseOrderError from "~/server/utils/error/purchaseOrderError";
-import receivingError from "~/server/utils/error/receivingError";
 import {getResponseMessageKey, responseMessage} from "~/types/IResponse";
 
 export default defineEventHandler(async (event) => {
@@ -25,11 +23,31 @@ export default defineEventHandler(async (event) => {
             statusText: getResponseMessageKey(responseMessage.receivingComplete)
         })
     } else {
-        await prismaClient.receiving.delete({
+        const deleteResponse = await prismaClient.receiving.delete({
             where: {
                 code: params.receivingCode
+            },
+            select: {
+                code: true,
+                poCode: true
             }
         })
-        setResponseStatus(event, 204)
+
+        const countPO = await prismaClient.receiving.count({
+            where: {
+                poCode: deleteResponse.poCode
+            }
+        })
+        if (!countPO) {
+            await prismaClient.purchaseOrder.update({
+                where: {
+                    code: deleteResponse.poCode
+                },
+                data: {
+                    status: 1
+                }
+            })
+        }
+        return deleteResponse.code
     }
 })

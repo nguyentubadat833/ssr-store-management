@@ -126,10 +126,14 @@ class ConsoleData extends IMainConsoleData {
 
   async deleteData(): Promise<void> {
     if (receivingCurrent.code) {
-      await del({
+      const result = await del({
         receivingCode: receivingCurrent.code
       })
-      await this.refreshData()
+      if (result){
+        await this.refreshData()
+        this.clearState()
+        this.isOpenModal.value = false
+      }
     }
   }
 
@@ -175,7 +179,7 @@ class ConsoleData extends IMainConsoleData {
         } as IReceivingReq
       })
       if (code) {
-        await receivingRefresh()
+        await this.refreshData()
         this.mapState(await this.selectByCode(code))
       }
     }
@@ -207,38 +211,38 @@ function selectedPo(data: any) {
 }
 
 function acceptWarehouseAll(warehouseCode: string) {
-  // receivingCurrent.stocks.forEach(e => {
-  //   e.warehouseCode = warehouseCode
-  // })
+  receivingCurrent.stocks?.forEach(e => {
+    e.warehouseCode = warehouseCode
+  })
 }
 
 async function changeStatus(input?: number) {
   switch (input) {
     case 0:
-      // await save(<IReceivingUpdateReq>{
-      //   params: {
-      //     updateType: 'cancel',
-      //     receivingCode: receivingCurrent.code
-      //   }
-      // })
-      // await refreshState()
+      await save({
+        params: {
+          type: 'cancel',
+          receivingCode: receivingCurrent.code
+        }
+      })
+      await refreshState()
       break
       // case 1:
-      //   await save(<IReceivingUpdateReq>{
+      //   await save({
       //     params: {
-      //       updateType: 'progress',
+      //       type: 'progress',
       //       receivingCode: receivingCurrent.code
       //     }
       //   })
       //   break
     case 2:
-      // await save(<IReceivingUpdateReq>{
-      //   params: {
-      //     updateType: 'imported',
-      //     receivingCode: receivingCurrent.code
-      //   }
-      // })
-      // await refreshState()
+      await save({
+        params: {
+          type: 'imported',
+          receivingCode: receivingCurrent.code
+        }
+      })
+      await refreshState()
       break
   }
 }

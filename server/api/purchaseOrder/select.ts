@@ -37,7 +37,9 @@ export default defineEventHandler(async (event) => {
         case "manyOrdered":
             const response = await prismaClient.purchaseOrder.findMany({
                 where: {
-                    status: 1
+                    status: {
+                        in: [1, 2]
+                    }
                 },
                 select: {
                     code: true,
