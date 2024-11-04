@@ -15,8 +15,6 @@ definePageMeta({
   }
 })
 
-const toast = useToast()
-const notification = useNotification
 const {data: supplierFetch, keyData: supplierKey, getSupplierName} = useSupplier()
 const {data, save, select, del, keyData: poKey, purchaseOrderStatus} = usePurchaseOrder()
 const {data: productFetch, keyData: productKey, getProductName} = useProduct()
@@ -132,6 +130,15 @@ class ConsoleData extends IMainConsoleData {
     this.isOpenModal.value = true
     if (isObject(object)) {
       useAssign(poCurrent, object)
+      console.log(poCurrent.details)
+      poCurrent.details?.map(e => {
+        if (e.quantity && e.totalAmount) {
+          e.unitPrice = e.totalAmount / e.quantity
+        }
+        return {
+          ...e
+        }
+      })
     }
   }
 
