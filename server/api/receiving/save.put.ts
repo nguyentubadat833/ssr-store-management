@@ -11,10 +11,7 @@ export default defineEventHandler(async (event) => {
         const {code, stocks: stocksReq} = body
         const isNonSelectWarehouse = stocksReq?.some(e => e.inQuantity && e.inQuantity > 0 && !e.warehouseCode)
         if (isNonSelectWarehouse) {
-            throw createError({
-                statusCode: 400,
-                statusText: getResponseMessageKey(responseMessage.invalidWarehouse)
-            })
+            receivingError.invalidWarehouse()
         }
         const isProgress = stocksReq?.some(e => {
             return e.inQuantity && e.inQuantity > 0
@@ -22,10 +19,7 @@ export default defineEventHandler(async (event) => {
         if (code) {
             const status = await getReceivingStatus(code, event)
             if (status === 2) {
-                throw createError({
-                    statusCode: 400,
-                    statusText: getResponseMessageKey(responseMessage.receivingComplete)
-                })
+                receivingError.complete()
             } else {
                 return prismaClient.receiving.update({
                     where: {
@@ -129,10 +123,7 @@ export default defineEventHandler(async (event) => {
                                 return data.some(e => e.inQuantity === e.outQuantity)
                             })
                             if (isOutStock) {
-                                throw createError({
-                                    statusCode: 400,
-                                    statusText: getResponseMessageKey(responseMessage.receivingDispatch)
-                                })
+                                receivingError.dispatch()
                             } else {
                                 await setCancel(receivingCode)
                                 setResponseStatus(event, 204, getResponseMessageKey(responseMessage.successfullyCanceled))
@@ -143,10 +134,7 @@ export default defineEventHandler(async (event) => {
                 case "imported":
                     switch (status) {
                         case 0:
-                            throw createError({
-                                statusCode: 400,
-                                statusText: getResponseMessageKey(responseMessage.receivingPending)
-                            })
+                            receivingError.pending()
                         case 1:
                             try {
                                 await setImported(receivingCode)

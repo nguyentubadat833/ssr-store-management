@@ -2,6 +2,7 @@ import {IPurchaseOrderDetail, IPurchaseOrderParamsSaveReq, IPurchaseOrderReq} fr
 import randomstring from "randomstring";
 import {Prisma} from "@prisma/client";
 import {getResponseMessageKey, responseMessage} from "~/types/IResponse";
+import {EventHandlerRequest, H3Event} from "h3";
 
 export default defineEventHandler(async (event) => {
     const params: IPurchaseOrderParamsSaveReq = getQuery(event)
@@ -11,10 +12,7 @@ export default defineEventHandler(async (event) => {
         const details = body?.details?.filter(e => !('status' in e) || e.status === 1)
             .map(e => {
                 if (!e.quantity || (e.quantity > 0 && !e.totalAmount)) {
-                    throw createError({
-                        statusCode: 400,
-                        statusText: getResponseMessageKey(responseMessage.invalidQuantityAndTotalAmount)
-                    })
+                    purchaseOrderError.invalidQuantityAndTotalAmount()
                 }
                 return {
                     ...e,
@@ -42,6 +40,15 @@ export default defineEventHandler(async (event) => {
                 }
             });
         } else {
+            const status = await getStatus(poCode, event)
+            switch (status) {
+                case 1:
+                    purchaseOrderError.ordered()
+                    break
+                case 2:
+                    purchaseOrderError.orderedAndStockEntered()
+                    break
+            }
             return prismaClient.purchaseOrder.update({
                 where: {
                     code: poCode
@@ -56,18 +63,7 @@ export default defineEventHandler(async (event) => {
             })
         }
     } else {
-        const status = await prismaClient.purchaseOrder.findUniqueOrThrow({
-            where: {
-                code: poCode
-            },
-            select: {
-                status: true
-            }
-        }).then((data) => {
-            return data.status
-        }).catch(e => {
-            handlerError(e, event)
-        })
+        const status = await getStatus(poCode, event)
         switch (type) {
             case "cancel":
                 switch (status) {
@@ -87,12 +83,8 @@ export default defineEventHandler(async (event) => {
                         }).catch(e => {
                             handlerError(e, event)
                         })
-
                         if (Array.isArray(data) && data.length > 0) {
-                            throw createError({
-                                statusCode: 400,
-                                statusText: getResponseMessageKey(responseMessage.purchaseOrderToLinkReceiving)
-                            })
+                            purchaseOrderError.orderToLinkReceiving()
                         } else {
                             await prismaClient.purchaseOrder.update({
                                 where: {
@@ -102,13 +94,11 @@ export default defineEventHandler(async (event) => {
                                     status: 0
                                 }
                             })
-                            break
                         }
+                        break
                     case 2:
-                        throw createError({
-                            statusCode: 400,
-                            statusText: getResponseMessageKey(responseMessage.purchaseOrderOrderedAndStockEntered)
-                        })
+                        purchaseOrderError.orderedAndStockEntered()
+                        break
                 }
                 break
             case "confirm":
@@ -136,21 +126,32 @@ export default defineEventHandler(async (event) => {
                                 break
                             }
                         }
-                        throw createError({
-                            statusCode: 400,
-                            statusText: getResponseMessageKey(responseMessage.purchaseOrderNoProduct)
-                        })
+                        purchaseOrderError.orderNoProduct()
+                        break
                     case 1:
                         setResponseStatus(event, 204, getResponseMessageKey(responseMessage.purchaseOrderOrdered))
                         break
                     case 2:
-                        throw createError({
-                            statusCode: 400,
-                            statusText: getResponseMessageKey(responseMessage.purchaseOrderOrderedAndStockEntered)
-                        })
+                        purchaseOrderError.orderedAndStockEntered()
+                        break
                 }
                 break
         }
 
     }
 })
+
+async function getStatus(code: string, event: H3Event<EventHandlerRequest>) {
+    return await prismaClient.purchaseOrder.findUniqueOrThrow({
+        where: {
+            code: code
+        },
+        select: {
+            status: true
+        }
+    }).then((data) => {
+        return data.status
+    }).catch(e => {
+        handlerError(e, event)
+    })
+}

@@ -44,7 +44,7 @@ onMounted(() => {
     </div>
     <slot/>
     <ClientOnly>
-      <UModal id="console-modal" v-model="consoleData.isOpenModal.value" :ui="{width: 'md:max-w-screen-md'}" prevent-close>
+      <UModal id="console-modal" v-model="consoleData.isOpenModal.value" :ui="{width: 'md:max-w-screen-md'}">
         <div>
           <div class="p-4 space-y-6 ">
             <slot name="modalHeader"/>

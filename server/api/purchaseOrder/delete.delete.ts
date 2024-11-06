@@ -26,14 +26,10 @@ export default defineEventHandler(async (event) => {
                 return data.code
             })
         case 1:
-            throw createError({
-                statusCode: 400,
-                statusText: getResponseMessageKey(responseMessage.purchaseOrderOrdered)
-            })
+            purchaseOrderError.ordered()
+            break
         case 2:
-            throw createError({
-                statusCode: 400,
-                statusText: getResponseMessageKey(responseMessage.purchaseOrderOrderedAndStockEntered)
-            })
+            purchaseOrderError.orderedAndStockEntered()
+            break
     }
 })

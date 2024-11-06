@@ -18,10 +18,7 @@ export default defineEventHandler(async (event) => {
             return handlerError(error, event)
         })
     if (status === 2) {
-        throw createError({
-            statusCode: 400,
-            statusText: getResponseMessageKey(responseMessage.receivingComplete)
-        })
+        receivingError.complete()
     } else {
         const deleteResponse = await prismaClient.receiving.delete({
             where: {

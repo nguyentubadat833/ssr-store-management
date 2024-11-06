@@ -1,13 +1,44 @@
-import {IResponseErrorObject} from "~/types/IResponse";
-import {EventHandlerRequest, H3Event} from "h3";
+import {getResponseMessageKey, responseMessage} from "~/types/IResponse";
 
-function ordered(event: H3Event<EventHandlerRequest>) {
-    return handlerError({
-        isError: true,
-        message: 'Đơn hàng đang tiến hành'
-    } as IResponseErrorObject, event)
+function ordered() {
+    throw createError({
+        statusCode: 400,
+        statusText: getResponseMessageKey(responseMessage.purchaseOrderOrdered)
+    })
+}
+
+function orderedAndStockEntered() {
+    throw createError({
+        statusCode: 400,
+        statusText: getResponseMessageKey(responseMessage.purchaseOrderOrderedAndStockEntered)
+    })
+}
+
+function orderToLinkReceiving() {
+    throw createError({
+        statusCode: 400,
+        statusText: getResponseMessageKey(responseMessage.purchaseOrderToLinkReceiving)
+    })
+}
+
+function orderNoProduct() {
+    throw createError({
+        statusCode: 400,
+        statusText: getResponseMessageKey(responseMessage.purchaseOrderNoProduct)
+    })
+}
+
+function invalidQuantityAndTotalAmount() {
+    throw createError({
+        statusCode: 400,
+        statusText: getResponseMessageKey(responseMessage.invalidQuantityAndTotalAmount)
+    })
 }
 
 export default {
-    ordered
+    ordered,
+    orderedAndStockEntered,
+    orderToLinkReceiving,
+    orderNoProduct,
+    invalidQuantityAndTotalAmount
 }

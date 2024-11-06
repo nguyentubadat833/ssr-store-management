@@ -1,22 +1,38 @@
 import {EventHandlerRequest, H3Event} from "h3";
-import {IResponseErrorObject} from "~/types/IResponse";
+import {getResponseMessageKey, IResponseErrorObject, responseMessage} from "~/types/IResponse";
 
-function imported(event: H3Event<EventHandlerRequest>) {
-    return handlerError({
-        isError: true,
-        message: 'Đã hoàn thành nhập hàng'
-    } as IResponseErrorObject, event)
+function invalidWarehouse() {
+    throw createError({
+        statusCode: 400,
+        statusText: getResponseMessageKey(responseMessage.invalidWarehouse)
+    })
 }
 
-function outed(event: H3Event<EventHandlerRequest>) {
-    return handlerError({
-        isError: true,
-        message: 'Đã xuất hàng'
-    } as IResponseErrorObject, event)
+function complete() {
+    throw createError({
+        statusCode: 400,
+        statusText: getResponseMessageKey(responseMessage.receivingComplete)
+    })
+}
+
+function dispatch() {
+    throw createError({
+        statusCode: 400,
+        statusText: getResponseMessageKey(responseMessage.receivingDispatch)
+    })
+}
+
+function pending() {
+    throw createError({
+        statusCode: 400,
+        statusText: getResponseMessageKey(responseMessage.receivingPending)
+    })
 }
 
 
 export default {
-    imported,
-    outed
+    invalidWarehouse,
+    complete,
+    dispatch,
+    pending
 }
