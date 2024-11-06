@@ -117,6 +117,8 @@ const inStockDetailColumns = [{
 }, {
   key: 'inQuantity',
   label: 'In Quantity'
+}, {
+  key: 'actions',
 }]
 
 class ConsoleData extends IMainConsoleData {
@@ -129,7 +131,7 @@ class ConsoleData extends IMainConsoleData {
       const result = await del({
         receivingCode: receivingCurrent.code
       })
-      if (result){
+      if (result) {
         await this.refreshData()
         this.clearState()
         this.isOpenModal.value = false
@@ -137,14 +139,15 @@ class ConsoleData extends IMainConsoleData {
     }
   }
 
-  mapState(object: any): void {
+  async mapState(object: IReceivingRes): Promise<void> {
     console.log(object)
     this.isOpenModal.value = true
     if (isObject(object)) {
-      useAssign(receivingCurrent, object)
+      const data = await this.selectByCode(object.code)
+      if (data) {
+        useAssign(receivingCurrent, data)
+      }
     }
-    console.log('current', receivingCurrent)
-    console.log('object', object)
   }
 
   async refreshData(): Promise<void> {
@@ -180,7 +183,7 @@ class ConsoleData extends IMainConsoleData {
       })
       if (code) {
         await this.refreshData()
-        this.mapState(await this.selectByCode(code))
+        await this.mapState(await this.selectByCode(code))
       }
     }
   }
@@ -190,7 +193,7 @@ const consoleData = new ConsoleData()
 
 async function refreshState() {
   if (receivingCurrent.code) {
-    consoleData.mapState(await consoleData.selectByCode(receivingCurrent.code))
+    await consoleData.mapState(await consoleData.selectByCode(receivingCurrent.code))
   }
   await consoleData.refreshData()
 }
@@ -227,14 +230,6 @@ async function changeStatus(input?: number) {
       })
       await refreshState()
       break
-      // case 1:
-      //   await save({
-      //     params: {
-      //       type: 'progress',
-      //       receivingCode: receivingCurrent.code
-      //     }
-      //   })
-      //   break
     case 2:
       await save({
         params: {
@@ -249,7 +244,7 @@ async function changeStatus(input?: number) {
 
 function addProducts(data: IProductInfo[]) {
   const selected = data[0]
-  if (selected) {
+  if (selected && !receivingCurrent.stocks?.some(e => e.productCode === selected.code)) {
     receivingCurrent.stocks?.push({
       receivingCode: receivingCurrent.code,
       productName: selected.name,
@@ -270,6 +265,34 @@ function selectedWarehouseRow(data: any) {
       label: 'Apply to all records',
       click: () => acceptWarehouseAll(data)
     }]
+  })
+  toast.add(toastObject)
+}
+
+async function deleteDetail(data: IStockInfo, index: number) {
+  const toastObject = notification.getToastObject({
+    type: 'warn',
+    description: 'Do you want delete ?',
+    actions: [
+      {
+        label: 'Continue Delete',
+        click: async () => {
+          if (data.id) {
+            await save({
+              params: {
+                type: 'deleteStock',
+                receivingCode: receivingCurrent.code,
+                stockId: data.id
+              }
+            })
+            await refreshState()
+          } else {
+            receivingCurrent.stocks?.splice(index, 1)
+          }
+        }
+      }
+    ],
+    timeout: 3000
   })
   toast.add(toastObject)
 }
@@ -352,6 +375,9 @@ const tableUIConfig = {
               <UFormGroup :error="(!row.warehouseCode && row.inQuantity > 0) && 'You must select warehouse'">
                 <UInput v-model="row.inQuantity" type="number"/>
               </UFormGroup>
+            </template>
+            <template #actions-data="{row, index}">
+              <Icon name="ic:outline-clear" size="20" class="cursor-pointer" @click="deleteDetail(row, index)"/>
             </template>
           </UTable>
           <div class="flex items-center justify-end">

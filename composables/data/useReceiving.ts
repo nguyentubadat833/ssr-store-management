@@ -55,6 +55,7 @@ export default function () {
             return await useAPI({
                 endpoint: '/api/receiving/select',
                 params: req,
+                isShowSuccessMessage: false
             })
         }
 

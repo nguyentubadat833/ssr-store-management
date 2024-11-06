@@ -135,6 +135,7 @@ export default defineEventHandler(async (event) => {
                     switch (status) {
                         case 0:
                             receivingError.pending()
+                            break
                         case 1:
                             try {
                                 await setImported(receivingCode)
@@ -149,12 +150,30 @@ export default defineEventHandler(async (event) => {
                     }
                     break
                 case "deleteStock":
-                    if (stockId) {
-
-                    } else {
-
+                    switch (status) {
+                        case 0:
+                        case 1:
+                            if (stockId) {
+                                await prismaClient.stock.update({
+                                    where: {
+                                        id: stockId
+                                    },
+                                    data: {
+                                        status: 0
+                                    }
+                                })
+                                setResponseStatus(event, 204, 'Deleted')
+                                break
+                            } else {
+                                throw createError({
+                                    statusCode: 400,
+                                    statusText: 'Detail id is required'
+                                })
+                            }
+                        case 2:
+                            receivingError.complete()
+                            break
                     }
-                    break
             }
         }
     }

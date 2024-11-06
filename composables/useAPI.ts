@@ -1,6 +1,5 @@
 import type {Notification} from "#ui/types/notification";
 import {getResponseMessageValue} from "~/types/IResponse";
-import {de} from "cronstrue/dist/i18n/locales/de";
 
 interface IUseAPIObject {
     endpoint: string,
@@ -72,8 +71,9 @@ export default async function ({
                     if (isShowSuccessMessage) {
                         let description: string = ''
                         if (response.statusText in responseMessage) {
-                            console.log(response.statusText)
                             description = getResponseMessageValue(response.statusText as keyof typeof responseMessage, 'vi')
+                        } else {
+                            description = response.statusText
                         }
                         let toastObject: Partial<Notification> = getToastObject({
                             type: 'success',
