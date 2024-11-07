@@ -86,7 +86,38 @@ model Product {
   // purchaseOrderDetail PurchaseOrderDetail[]
 
   category Category? @relation(fields: [categoryCode], references: [code])
+  price    Price[]
 }
+
+model Price {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  productCode String @unique
+  priceData   Json
+  // basePrice     Float
+  // discountPrice Float?
+  // currency      String?
+  // startDate     DateTime
+  // endDate       DateTime
+  // status        Int      @default(0)
+
+  createdBy     String
+  createdAt     DateTime  @default(now())
+  lastUpdatedAt DateTime?
+  lastUpdatedBy String?
+
+  product Product? @relation(fields: [productCode], references: [code])
+}
+
+// model Condition {
+//   id            String    @id @default(auto()) @map("_id") @db.ObjectId
+//   code          String    @unique
+//   name          String
+//   status        Int       @default(1)
+//   createdBy     String
+//   createdAt     DateTime  @default(now())
+//   lastUpdatedAt DateTime?
+//   lastUpdatedBy String?
+// }
 
 model Stock {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId

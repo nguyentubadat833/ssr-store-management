@@ -12,7 +12,7 @@ definePageMeta({
   layout: 'console',
   isAuth: true,
   isConsoleMenu: true,
-  groupMenu: 'warehouse',
+  groupMenu: 'inventory',
   pageName: {
     en: 'Receiving management'
   }
@@ -243,16 +243,19 @@ async function changeStatus(input?: number) {
 }
 
 function addProducts(data: IProductInfo[]) {
-  const selected = data[0]
-  if (selected && !receivingCurrent.stocks?.some(e => e.productCode === selected.code)) {
-    receivingCurrent.stocks?.push({
-      receivingCode: receivingCurrent.code,
-      productName: selected.name,
-      productCode: selected.code,
-      orderQuantity: 0,
-      inQuantity: 0,
-      warehouseCode: ''
-    } as IStockInfo)
+  if (isArray(data) && data.length > 0) {
+    data.forEach(selected => {
+      if (!receivingCurrent.stocks?.some(e => e.productCode === selected.code)) {
+        receivingCurrent.stocks?.push({
+          receivingCode: receivingCurrent.code,
+          productName: selected.name,
+          productCode: selected.code,
+          orderQuantity: 0,
+          inQuantity: 0,
+          warehouseCode: ''
+        } as IStockInfo)
+      }
+    })
   }
 }
 

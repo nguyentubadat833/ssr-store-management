@@ -14,6 +14,5 @@ export default defineEventHandler(async (event) => {
             return prismaClient.warehouse.findMany({
                 select: selectField,
             })
-
     }
 })

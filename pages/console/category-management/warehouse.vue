@@ -7,7 +7,7 @@ definePageMeta({
   layout: 'console',
   isAuth: true,
   isConsoleMenu: true,
-  groupMenu: 'warehouse',
+  groupMenu: 'category',
   pageName: {
     en: 'Warehouse management'
   }

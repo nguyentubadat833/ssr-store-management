@@ -11,7 +11,7 @@ definePageMeta({
   layout: 'console',
   isAuth: true,
   isConsoleMenu: true,
-  groupMenu: 'product',
+  groupMenu: 'category',
   pageName: {
     en: 'Product management'
   }
