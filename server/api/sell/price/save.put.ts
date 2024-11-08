@@ -15,6 +15,13 @@ export default defineEventHandler(async (event) => {
                         statusCode: 400,
                         statusText: 'Invalid time applying'
                     })
+                }else {
+                    if (new Date(startDate) > new Date(endDate)) {
+                        throw createError({
+                            statusCode: 400,
+                            statusText: 'Start date must be before End date'
+                        });
+                    }
                 }
             }
             const priceData = await prismaClient.price.findUnique({
