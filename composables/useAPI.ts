@@ -110,6 +110,8 @@ export default async function ({
             let description: string = ''
             if (e.statusText in responseMessage) {
                 description = getResponseMessageValue(e.statusText as keyof typeof responseMessage, 'vi')
+            }else {
+                description = e.statusText
             }
             if (isShowErrorMessage) {
                 let toastObject = getToastObject({

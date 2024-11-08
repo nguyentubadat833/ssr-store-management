@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import type {IMainConsoleData} from "~/types/client/IMainConsoleData";
+import {IMainConsoleData} from "~/types/client/IMainConsoleData";
 
-const {consoleData} = defineProps<{
-  consoleData: IMainConsoleData,
-}>()
+const {consoleData, useToolbar} = defineProps({
+  consoleData: {
+    type: Object as PropType<IMainConsoleData>,
+    required: true
+  },
+  useToolbar: {
+    type: Boolean,
+    default: true,
+    required: false
+  }
+})
 
 async function deleteAction() {
   await consoleData.deleteData()
@@ -44,7 +52,8 @@ onMounted(() => {
     </div>
     <slot/>
     <ClientOnly>
-      <UModal id="console-modal" v-model="consoleData.isOpenModal.value" :ui="{width: 'md:max-w-screen-md'}">
+      <UModal id="console-modal" v-model="consoleData.isOpenModal.value" :ui="{width: 'md:max-w-screen-md'}"
+              prevent-close>
         <div>
           <div class="p-4 space-y-6 ">
             <slot name="modalHeader"/>
@@ -52,12 +61,11 @@ onMounted(() => {
             <slot name="modalBody"/>
             <UDivider/>
             <div class="flex justify-between items-center gap-4">
-              <div class="flex items-center justify-start ">
-                <UIcon name="ic:sharp-close" size="20" class="cursor-pointer hover:bg-gray-500"
-                       @click="closeModal"/>
-                <span class="text-sm text-gray-400">(Esc)</span>
+              <div class="flex items-center gap-1 justify-start w-16 h-10 cursor-pointer hover:bg-gray-100" @click="closeModal">
+                <UIcon name="ic:sharp-close" size="20"/>
+                <span class="text-gray-400">(Esc)</span>
               </div>
-              <div class="flex justify-end gap-4">
+              <div class="flex justify-end gap-4" v-if="useToolbar">
                 <UTooltip text="Clear">
                   <UButton icon="ic:sharp-cleaning-services" @click="consoleData.clearState()"/>
                 </UTooltip>

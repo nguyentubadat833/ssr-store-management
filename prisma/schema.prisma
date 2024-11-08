@@ -86,7 +86,7 @@ model Product {
   // purchaseOrderDetail PurchaseOrderDetail[]
 
   category Category? @relation(fields: [categoryCode], references: [code])
-  price    Price[]
+  price    Price?
 }
 
 model Price {

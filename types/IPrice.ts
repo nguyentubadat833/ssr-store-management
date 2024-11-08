@@ -1,35 +1,35 @@
 export interface IPriceReq {
     id?: string
     productCode: string
-    priceData: IPriceData
+    priceObject?: IPriceDataObject
 }
 
 export interface IPriceRes {
     id: string
     productCode: string
-    priceData: IPriceData
+    priceObject?: IPriceDataObject
 }
 
-export interface IPriceData {
+export interface IPriceDataObject {
     basePrice: number
     discountPrice?: number
     currency?: any
     startDate: Date
     endDate: Date
-    status: number
+    status?: number // 1.active
 }
 
 export interface IPriceParamsSelectReq {
-    type: 'many',
+    type: 'byProductCode',
     productCode?: string
 }
 
 export interface IPriceParamsSaveReq {
     type: 'save',
-    productCode: string
+    // productCode: string
 }
 
 export interface IPriceSaveReq {
     params: IPriceParamsSaveReq,
-    body: IPriceRes
+    body: IPriceReq
 }
